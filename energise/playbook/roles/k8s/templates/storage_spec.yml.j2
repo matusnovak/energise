@@ -1,0 +1,11 @@
+{% if storage.type == "host" %}
+hostPath:
+  path: "{{ storage.host.path if storage.host is defined else common.storage.host.path }}{{ '/' + storage.dir if storage.dir is defined else '' }}"
+{%- endif %}
+{% if storage.type == "nfs" %}
+nfs:
+  path: "{{ storage.nfs.path if storage.nfs is defined else common.storage.nfs.path }}{{ '/' + storage.dir if storage.dir is defined else '' }}"
+  server: "{{ storage.nfs.server }}"
+mountOptions:
+  {{ storage.nfs.options if storage.nfs is defined and storage.nfs.options is defined else common.storage.nfs.options | to_nice_yaml | indent(2) }}
+{%- endif %}

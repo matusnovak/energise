@@ -1,0 +1,7 @@
+allow_duplicates: false
+
+dependencies:
+  - role: openldap
+    when: phpldapadmin.enabled
+  - role: traefik
+    when: phpldapadmin.enabled

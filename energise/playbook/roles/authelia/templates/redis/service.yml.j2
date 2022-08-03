@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ authelia.redis.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if authelia.redis.serviceLabels -%}
+    {{ authelia.redis.serviceLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if authelia.redis.serviceAnnotations -%}
+  annotations:
+    {{ authelia.redis.serviceAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ authelia.redis.serviceType }}"
+  ports:
+    - port: 6379
+      protocol: TCP
+      name: redis
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}

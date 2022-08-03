@@ -1,0 +1,5 @@
+- name: "Deploy redis"
+  include_tasks: "redis.yml"
+
+- name: "Deploy server"
+  include_tasks: "server.yml"

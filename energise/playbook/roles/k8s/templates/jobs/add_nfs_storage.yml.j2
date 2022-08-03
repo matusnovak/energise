@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "storage-job"
+  namespace: "{{ common.namespace }}"
+  labels:
+    "app.kubernetes.io/managed-by": "energise"
+    "app.kubernetes.io/part-of": "{{ common.namespace }}"
+    "app.kubernetes.io/component": "storage-job"
+spec:
+  ttlSecondsAfterFinished: 60
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  backoffLimit: 1
+  template:
+    spec:
+      securityContext:
+        runAsUser: 0
+      containers:
+        - name: job
+          image: "{{ common.busybox.image.name }}:{{ common.busybox.image.tag }}"
+          imagePullPolicy: "{{ common.busybox.image.pullPolicy }}"
+          command:
+            - '/bin/sh'
+            - '-c'
+            - |
+{% for storage in storages %}
+              echo "Creating and configuring directory /mnt/nfs/{{ storage.dir }}";
+              mkdir -p "/mnt/nfs/{{ storage.dir }}";
+              chown {{ storage.uid }}:{{ storage.gid }} "/mnt/nfs/{{ storage.dir }}";
+{% if storage.mode is defined %}
+              chmod {{ storage.mode }} "/mnt/nfs/{{ storage.dir }}";
+{% endif %}
+{% endfor %}
+          volumeMounts:
+            - name: nfs-volume
+              mountPath: /mnt/nfs
+      restartPolicy: Never
+      volumes:
+        - name: nfs-volume
+          persistentVolumeClaim:
+            claimName: "storage-job"

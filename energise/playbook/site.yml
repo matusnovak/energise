@@ -1,0 +1,10 @@
+- hosts: hosts
+  roles:
+    - role: authelia
+      tags: authelia
+    - role: phpldapadmin
+      tags: phpldapadmin
+    - role: adminer
+      tags: adminer
+    - role: filebrowser
+      tags: filebrowser

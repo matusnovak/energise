@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ filebrowser.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: "{{ filebrowser_json | hash('md5') }}"
+{% if filebrowser.server.podAnnotations %}
+        {{ filebrowser.server.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if filebrowser.server.podLabels %}
+        {{ filebrowser.server.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ filebrowser.server.name }}"
+      securityContext:
+        runAsUser: {{ filebrowser.server.uid }}
+        runAsGroup: {{ filebrowser.server.gid }}
+        fsGroup: {{ filebrowser.server.gid }}
+{% if filebrowser.server.auth.enabled %}
+      initContainers:
+        {{ lookup('template', openldap_container_add_group_path, template_vars=dict(ldap_group_name=filebrowser.server.auth.group)) | indent(8) }}
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ filebrowser.server.image.name }}:{{ filebrowser.server.image.tag }}"
+          imagePullPolicy: "{{ filebrowser.server.image.pullPolicy }}"
+          command:
+            - '/filebrowser'
+          args:
+            - '--config'
+            - '/etc/filebrowser/filebrowser.json'
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ filebrowser.server.resources | to_nice_yaml | indent(12) }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+            - name: files-volume
+              mountPath: /files
+            - name: config-volume
+              mountPath: "/etc/filebrowser"
+              readonly: true
+      nodeSelector:
+        {{ filebrowser.server.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: "{{ filebrowser.server.name }}"
+            optional: false
+            items:
+              - key: "filebrowser.json"
+                path: "filebrowser.json"
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ filebrowser.server.name }}-data"
+        - name: files-volume
+          persistentVolumeClaim:
+            claimName: "{{ filebrowser.server.name }}-files"

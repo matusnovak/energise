@@ -1,0 +1,59 @@
+entryPoints:
+  traefik:
+    address: ":{{ traefik.server.port }}"
+{% if traefik.server.http.enabled %}
+  web:
+    address: ":{{ traefik.server.http.port}}"
+{% endif %}
+{% if traefik.server.https.enabled %}
+  websecure:
+    address: ":{{ traefik.server.https.port}}"
+{% endif %}
+{% if traefik.server.accessLog.enabled %}
+accessLog: {}
+{% endif %}
+log:
+  level: {{ traefik.server.log.level }}
+ping:
+  entryPoint: traefik
+{% if traefik.server.dashboard.enabled %}
+api:
+  dashboard: true
+  insecure: true
+{% endif %}
+providers:
+  kubernetesCRD:
+    namespaces:
+      - "{{ common.namespace }}"
+    allowCrossNamespace: false
+{% if traefik.server.https.enabled and traefik.server.certs.type == 'self-signed' %}
+tls:
+  certificates:
+    - certFile: "/certs/{{ common.domain }}.cert"
+      keyFile: "/certs/{{ common.domain }}.key"
+{% endif %}
+{% if traefik.server.https.enabled and traefik.server.certs.type == 'resolver' %}
+certificatesResolvers:
+  resolver:
+    acme:
+      email: "{{ traefik.server.certs.email }}"
+      storage: "/acme/acme.json"
+      caServer: "{{ traefik.server.certs.server }}"
+      certificatesDuration: {{ traefik.server.certs.duration }}
+{% if traefik.server.certs.challenge == 'http' %}
+      tlsChallenge: {}
+{% elif traefik.server.certs.challenge == 'tls' %}
+      httpChallenge:
+        entryPoint: "web"
+{% elif traefik_acme_challenge == 'dns' %}
+      dnsChallenge:
+        provider: "{{ traefik.server.certs.dnsProvider }}"
+        resolvers:
+          {{ traefik.server.certs.dnsResolvers | to_nice_yaml | indent(16) }}
+{% endif %}
+{% endif %}
+{% if traefik.server.metrics.enabled %}
+metrics:
+  prometheus:
+    entryPoint: "traefik"
+{%- endif %}

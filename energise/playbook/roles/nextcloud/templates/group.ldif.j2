@@ -1,0 +1,6 @@
+dn: cn=nextcloud,ou=groups,{{ common.domainComponent }}
+changetype: add
+objectClass: top
+objectClass: groupOfUniqueNames
+uniqueMember: cn=readonly,{{ common.domainComponent }}
+cn: nextcloud

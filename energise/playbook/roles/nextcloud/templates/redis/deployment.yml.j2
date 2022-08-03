@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ nextcloud.redis.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if nextcloud.redis.podAnnotations %}
+      annotations:
+        {{ nextcloud.redis.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if nextcloud.redis.podLabels %}
+        {{ nextcloud.redis.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ nextcloud.redis.name }}"
+      securityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+      containers:
+        - name: "server"
+          image: "{{ nextcloud.redis.image.name }}:{{ nextcloud.redis.image.tag }}"
+          imagePullPolicy: "{{ nextcloud.redis.image.pullPolicy }}"
+          command:
+            - 'redis-server'
+          args:
+            - '--requirepass'
+            - '{{ nextcloud.redis.password }}'
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - "redis-cli"
+                - "ping"
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ nextcloud.redis.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/data"
+      nodeSelector:
+        {{ nextcloud.redis.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: "data-volume"
+          emptyDir: {}

@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ authelia.redis.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if authelia.redis.podAnnotations %}
+      annotations:
+        {{ authelia.redis.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if authelia.redis.podLabels %}
+        {{ authelia.redis.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ authelia.redis.name }}"
+      securityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+      containers:
+        - name: "server"
+          image: "{{ authelia.redis.image.name }}:{{ authelia.redis.image.tag }}"
+          imagePullPolicy: "{{ authelia.redis.image.pullPolicy }}"
+          command:
+            - 'redis-server'
+          args:
+            - '--requirepass'
+            - '{{ authelia.redis.password }}'
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - "redis-cli"
+                - "ping"
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ authelia.redis.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/data"
+      nodeSelector:
+        {{ authelia.redis.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: "data-volume"
+          emptyDir: {}

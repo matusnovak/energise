@@ -1,0 +1,28 @@
+- name: "Run storage setup - data"
+  include_tasks: "roles/k8s/tasks/storage.yml"
+  vars:
+    name: "{{ filebrowser.server.name }}"
+    storage:
+      dir: "{{ filebrowser.server.dataStorage.dir }}"
+      uid: "{{ filebrowser.server.uid }}"
+      gid: "{{ filebrowser.server.gid }}"
+
+- name: "Run storage setup - files"
+  include_tasks: "roles/k8s/tasks/storage.yml"
+  vars:
+    name: "{{ filebrowser.server.name }}"
+    storage:
+      dir: "{{ filebrowser.server.filesStorage.dir }}"
+      uid: "{{ filebrowser.server.uid }}"
+      gid: "{{ filebrowser.server.gid }}"
+
+- set_fact:
+    filebrowser_json: "{{ lookup('template', role_path + '/templates/filebrowser.json.j2') | to_json }}"
+    filebrowser_server_url: "{{ filebrowser.server.name }}.{{ common.namespace }}.svc.cluster.local"
+
+- name: "Run deployment"
+  include_tasks: "roles/k8s/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/server/"
+    name: "{{ filebrowser.server.name }}"
+    deployment_timeout: 12

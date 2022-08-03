@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ nextcloud.minio.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if nextcloud.minio.podAnnotations %}
+      annotations:
+        {{ nextcloud.minio.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if nextcloud.minio.podLabels %}
+        {{ nextcloud.minio.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ nextcloud.minio.name }}"
+      securityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+      containers:
+        - name: "server"
+          image: "{{ nextcloud.minio.image.name }}:{{ nextcloud.minio.image.tag }}"
+          imagePullPolicy: "{{ nextcloud.minio.image.pullPolicy }}"
+          command:
+            - "sh"
+          args:
+            - "-c"
+            - "mkdir -p /export/{{ nextcloud.server.s3.bucket }} && minio server /export"
+          env:
+            - name: MINIO_BROWSER
+              value: "off"
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ nextcloud.minio.name }}"
+                  key: accessKey
+                  optional: false
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ nextcloud.minio.name }}"
+                  key: secretKey
+                  optional: false
+            - name: MINIO_SITE_REGION
+              value: "{{ nextcloud.server.s3.region }}"
+          ports:
+            - name: s3
+              containerPort: 9000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: s3
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: s3
+            failureThreshold: 1
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ nextcloud.minio.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/export"
+      nodeSelector:
+        {{ nextcloud.minio.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ nextcloud.minio.name }}"
