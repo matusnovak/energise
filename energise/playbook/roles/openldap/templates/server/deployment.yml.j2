@@ -30,6 +30,10 @@ spec:
         allowPrivilegeEscalation: false
         runAsUser: 0
         fsGroup: 911
+{% if openldap.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ openldap.server.pullSecret }}"
+{% endif %}
       containers:
         - name: "server"
           image: "{{ openldap.server.image.name }}:{{ openldap.server.image.tag }}"
@@ -64,6 +68,9 @@ spec:
                   name: "{{ openldap.server.name }}"
                   key: readonlyPassword
                   optional: false
+{% if openldap.server.env %}
+            {{ openldap.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
           ports:
             - name: openldap
               containerPort: 389

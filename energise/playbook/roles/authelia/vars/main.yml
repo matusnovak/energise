@@ -49,12 +49,12 @@ authelia:
     log:
       # Log level.
       # type: string
-      level: "debug"
+      level: "info"
 
     # Additional environment variables for the pod.
     # type: map
-    # example: { "MY_ENV_KEY": "some_value" }
-    env: {}
+    # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
+    env: []
 
     # The kubernetes service type.
     # type: string
@@ -135,8 +135,8 @@ authelia:
 
     # Additional environment variables for the pod.
     # type: map
-    # example: { "MY_ENV_KEY": "some_value" }
-    env: {}
+    # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
+    env: []
 
     # The kubernetes service type.
     # type: string

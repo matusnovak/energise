@@ -1,11 +1,13 @@
-{% if storage.type == "host" %}
+{% if (storage.type | default(common.storage.type)) == "host" %}
+{% set storage_host = (storage.host | default(common.storage.host)) %}
 hostPath:
-  path: "{{ storage.host.path if storage.host is defined else common.storage.host.path }}{{ '/' + storage.dir if storage.dir is defined else '' }}"
+  path: "{{ storage_host.path }}{{ '/' + storage.dir if storage.dir is defined else '' }}"
 {%- endif %}
-{% if storage.type == "nfs" %}
+{% if (storage.type | default(common.storage.type)) == "nfs" %}
+{% set storage_nfs = (storage.nfs | default(common.storage.nfs)) %}
 nfs:
-  path: "{{ storage.nfs.path if storage.nfs is defined else common.storage.nfs.path }}{{ '/' + storage.dir if storage.dir is defined else '' }}"
-  server: "{{ storage.nfs.server }}"
+  path: "{{ storage_nfs.path }}{{ '/' + storage.dir if storage.dir is defined else '' }}"
+  server: "{{ storage_nfs.server }}"
 mountOptions:
-  {{ storage.nfs.options if storage.nfs is defined and storage.nfs.options is defined else common.storage.nfs.options | to_nice_yaml | indent(2) }}
+  {{ storage_nfs.options | to_nice_yaml | indent(2) }}
 {%- endif %}

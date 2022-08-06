@@ -7,6 +7,7 @@ from energise.cli.ansible import ansible_runner
 def action_args(parser: ArgumentParser):
     parser.set_defaults(func=action_func)
     parser.add_argument('--ask-become-pass', action='store_true', default=False, help='Ask for sudo password')
+    parser.add_argument('--experimental', type=str, default=None, choices=['registry'])
 
 
 def action_func(args: Args):

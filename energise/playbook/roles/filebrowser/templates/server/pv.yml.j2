@@ -11,15 +11,8 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
-{% if common.storage.type == "host" %}
-  hostPath:
-    path: "{{ common.storage.host.path }}/{{ filebrowser.server.dataStorage.dir }}"
-{%- endif %}
-{% if common.storage.type == "nfs" %}
-  nfs:
-    path: "{{ common.storage.nfs.path }}/{{ filebrowser.server.dataStorage.dir }}"
-    server: "{{ common.storage.nfs.server }}"
-{%- endif %}
+  {{ lookup('template', storage_options_template, template_vars=dict(storage=filebrowser.server.dataStorage)) | indent(2) }}
+
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -34,12 +27,5 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
-{% if common.storage.type == "host" %}
-  hostPath:
-    path: "{{ common.storage.host.path }}/{{ filebrowser.server.filesStorage.dir }}"
-{%- endif %}
-{% if common.storage.type == "nfs" %}
-  nfs:
-    path: "{{ common.storage.nfs.path }}/{{ filebrowser.server.filesStorage.dir }}"
-    server: "{{ common.storage.nfs.server }}"
-{%- endif %}
+  {{ lookup('template', storage_options_template, template_vars=dict(storage=filebrowser.server.filesStorage)) | indent(2) }}
+

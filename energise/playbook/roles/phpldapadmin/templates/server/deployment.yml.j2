@@ -29,6 +29,10 @@ spec:
       securityContext:
         runAsUser: 0
         allowPrivilegeEscalation: false
+{% if phpldapadmin.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ phpldapadmin.server.pullSecret }}"
+{% endif %}
       containers:
         - name: "server"
           image: "{{ phpldapadmin.server.image.name }}:{{ phpldapadmin.server.image.tag }}"
@@ -38,6 +42,9 @@ spec:
               value: "#PYTHON2BASH:[{'{{ openldap_server_url }}': [{'server': [{'tls': False}]},{'login': [{'bind_id': 'cn=admin,{{ common.domainComponent }}'}]}]}]"
             - name: PHPLDAPADMIN_HTTPS
               value: "false"
+{% if phpldapadmin.server.env %}
+            {{ phpldapadmin.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
           ports:
             - name: web
               containerPort: 80

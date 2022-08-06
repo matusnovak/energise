@@ -13,7 +13,7 @@ traefik:
 
       # Image tag.
       # type: string
-      tag: "v2.4"
+      tag: "v2.8"
 
       # Image pull policy.
       # type: string
@@ -147,8 +147,8 @@ traefik:
 
     # Additional environment variables for the pod.
     # type: map
-    # example: { "MY_ENV_KEY": "some_value" }
-    env: {}
+    # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
+    env: []
 
     # The kubernetes service type.
     # type: string

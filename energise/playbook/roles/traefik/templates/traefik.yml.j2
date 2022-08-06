@@ -31,8 +31,18 @@ tls:
   certificates:
     - certFile: "/certs/{{ common.domain }}.cert"
       keyFile: "/certs/{{ common.domain }}.key"
+  domains:
+    - main: "*.{{ common.domain }}"
+      sans:
+        - "{{ common.domain }}"
 {% endif %}
 {% if traefik.server.https.enabled and traefik.server.certs.type == 'resolver' %}
+tls:
+  domains:
+    - main: "*.{{ common.domain }}"
+      sans:
+        - "{{ common.domain }}"
+  certresolver: "resolver"
 certificatesResolvers:
   resolver:
     acme:
@@ -45,11 +55,11 @@ certificatesResolvers:
 {% elif traefik.server.certs.challenge == 'tls' %}
       httpChallenge:
         entryPoint: "web"
-{% elif traefik_acme_challenge == 'dns' %}
+{% elif traefik.server.certs.challenge == 'dns' %}
       dnsChallenge:
         provider: "{{ traefik.server.certs.dnsProvider }}"
         resolvers:
-          {{ traefik.server.certs.dnsResolvers | to_nice_yaml | indent(16) }}
+          {{ traefik.server.certs.dnsResolvers | to_nice_yaml | indent(10) }}
 {% endif %}
 {% endif %}
 {% if traefik.server.metrics.enabled %}

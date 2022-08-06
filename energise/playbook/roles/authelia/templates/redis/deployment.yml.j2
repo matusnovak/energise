@@ -29,6 +29,10 @@ spec:
       securityContext:
         runAsUser: 1000
         allowPrivilegeEscalation: false
+{% if authelia.redis.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ authelia.redis.pullSecret }}"
+{% endif %}
       containers:
         - name: "server"
           image: "{{ authelia.redis.image.name }}:{{ authelia.redis.image.tag }}"
@@ -38,6 +42,10 @@ spec:
           args:
             - '--requirepass'
             - '{{ authelia.redis.password }}'
+{% if authelia.redis.env %}
+          env:
+            {{ authelia.redis.env | to_nice_yaml | indent(12) }}
+{% endif %}
           ports:
             - name: redis
               containerPort: 6379

@@ -29,6 +29,10 @@ spec:
       securityContext:
         runAsUser: 999
         fsGroup: 999
+{% if postgres.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ postgres.server.pullSecret }}"
+{% endif %}
       containers:
         - name: "server"
           image: "{{ postgres.server.image.name }}:{{ postgres.server.image.tag }}"
@@ -44,6 +48,9 @@ spec:
               value: "{{ postgres.server.user }}"
             - name: POSTGRES_DB
               value: "{{ postgres.server.database }}"
+{% if postgres.server.env %}
+            {{ postgres.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
           args:
             - '-c'
             - 'max_connections=256'

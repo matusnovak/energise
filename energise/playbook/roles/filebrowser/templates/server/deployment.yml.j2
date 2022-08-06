@@ -31,6 +31,10 @@ spec:
         runAsUser: {{ filebrowser.server.uid }}
         runAsGroup: {{ filebrowser.server.gid }}
         fsGroup: {{ filebrowser.server.gid }}
+{% if filebrowser.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ filebrowser.server.pullSecret }}"
+{% endif %}
 {% if filebrowser.server.auth.enabled %}
       initContainers:
         {{ lookup('template', openldap_container_add_group_path, template_vars=dict(ldap_group_name=filebrowser.server.auth.group)) | indent(8) }}
@@ -44,6 +48,10 @@ spec:
           args:
             - '--config'
             - '/etc/filebrowser/filebrowser.json'
+{% if filebrowser.server.env %}
+          env:
+            {{ filebrowser.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
           ports:
             - name: web
               containerPort: 8080

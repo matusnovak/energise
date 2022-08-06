@@ -29,6 +29,10 @@ spec:
       securityContext:
         runAsUser: 1000
         allowPrivilegeEscalation: false
+{% if adminer.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ adminer.server.pullSecret }}"
+{% endif %}
 {% if adminer.server.auth.enabled %}
       initContainers:
         {{ lookup('template', openldap_container_add_group_path, template_vars=dict(ldap_group_name=adminer.server.auth.group)) | indent(8) }}
@@ -42,6 +46,10 @@ spec:
               value: "{{ postgres_server_url }}"
             - name: ADMINER_DESIGN
               value: "nette"
+{% if adminer.server.env %}
+          env:
+            {{ adminer.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
           ports:
             - name: web
               containerPort: 8080

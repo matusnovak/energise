@@ -1,10 +1,12 @@
 - hosts: hosts
   roles:
     - role: authelia
-      tags: authelia
+      tags: homelab
     - role: phpldapadmin
-      tags: phpldapadmin
+      tags: homelab
     - role: adminer
-      tags: adminer
+      tags: homelab
     - role: filebrowser
-      tags: filebrowser
+      tags: homelab
+    - role: registry
+      tags: experimental_registry

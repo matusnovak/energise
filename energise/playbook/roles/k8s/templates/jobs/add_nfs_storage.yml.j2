@@ -16,6 +16,10 @@ spec:
     spec:
       securityContext:
         runAsUser: 0
+{% if common.busybox.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ common.busybox.pullSecret }}"
+{% endif %}
       containers:
         - name: job
           image: "{{ common.busybox.image.name }}:{{ common.busybox.image.tag }}"
@@ -24,12 +28,15 @@ spec:
             - '/bin/sh'
             - '-c'
             - |
+              echo "Configuring storage"
 {% for storage in storages %}
+{% if storage.setup | default(true) %}
               echo "Creating and configuring directory /mnt/nfs/{{ storage.dir }}";
               mkdir -p "/mnt/nfs/{{ storage.dir }}";
               chown {{ storage.uid }}:{{ storage.gid }} "/mnt/nfs/{{ storage.dir }}";
 {% if storage.mode is defined %}
               chmod {{ storage.mode }} "/mnt/nfs/{{ storage.dir }}";
+{% endif %}
 {% endif %}
 {% endfor %}
           volumeMounts:

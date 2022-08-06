@@ -29,6 +29,10 @@ spec:
       serviceAccountName: "{{ traefik.server.name }}"
       securityContext:
         runAsUser: 1000
+{% if traefik.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ traefik.server.pullSecret }}"
+{% endif %}
 {% if traefik.server.auth.enabled and traefik.server.dashboard.enabled %}
       initContainers:
         {{ lookup('template', openldap_container_add_group_path, template_vars=dict(ldap_group_name=traefik.server.auth.group)) | indent(8) }}
@@ -50,6 +54,10 @@ spec:
             - name: websecure
               containerPort: {{ traefik.server.https.port }}
               protocol: TCP
+{% endif %}
+{% if traefik.server.env %}
+          env:
+            {{ traefik.server.env | to_nice_yaml | indent(12) }}
 {% endif %}
           readinessProbe:
             httpGet:

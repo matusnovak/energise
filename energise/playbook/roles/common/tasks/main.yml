@@ -1,6 +1,6 @@
 - name: "Check if config file {{ include_vars_path }} exists"
   stat:
-    path: include_vars_path
+    path: "{{ include_vars_path }}"
   register: config_stat_result
 
 - name: "Load config file "
@@ -9,8 +9,28 @@
     hash_behaviour: merge
   when: config_stat_result.stat.exists
 
+- name: "No config found"
+  fail:
+    msg: "No such file: {{ include_vars_path }}"
+  when: not config_stat_result.stat.exists and not (ignore_config_error | default(false))
+
+- name: "Find kubernetes nodes"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Node
+    label_selectors:
+      - "node-role.kubernetes.io/master=true"
+  register: nodes
+
+- name: "Master kubernetes node check"
+  fail:
+    msg: "No master kubernetes node found!"
+  when: (nodes.resources | length) == 0
+
 - name: "Set common facts"
   set_fact:
+    master_node: "{{ nodes.resources[0] }}"
+    master_node_ip: "{{ nodes.resources[0].metadata.annotations['k3s.io/internal-ip'] }}"
     storage_options_template: "{{ playbook_dir }}/roles/k8s/templates/storage_spec.yml.j2"
 
 - name: "Create namespace - {{ common.namespace }}"

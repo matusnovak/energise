@@ -31,6 +31,10 @@ spec:
       securityContext:
         runAsUser: 1000
         allowPrivilegeEscalation: false
+{% if openldap.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ openldap.server.pullSecret }}"
+{% endif %}
       initContainers:
         - name: "init-postgres"
           image: "{{ postgres.server.image.name }}:{{ postgres.server.image.tag }}"
@@ -86,6 +90,10 @@ spec:
             - name: web
               containerPort: 9091
               protocol: TCP
+{% if authelia.server.env %}
+          env:
+            {{ authelia.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
           livenessProbe:
             httpGet:
               path: /

@@ -1,21 +1,3 @@
-- name: "Run storage setup - data"
-  include_tasks: "roles/k8s/tasks/storage.yml"
-  vars:
-    name: "{{ filebrowser.server.name }}"
-    storage:
-      dir: "{{ filebrowser.server.dataStorage.dir }}"
-      uid: "{{ filebrowser.server.uid }}"
-      gid: "{{ filebrowser.server.gid }}"
-
-- name: "Run storage setup - files"
-  include_tasks: "roles/k8s/tasks/storage.yml"
-  vars:
-    name: "{{ filebrowser.server.name }}"
-    storage:
-      dir: "{{ filebrowser.server.filesStorage.dir }}"
-      uid: "{{ filebrowser.server.uid }}"
-      gid: "{{ filebrowser.server.gid }}"
-
 - set_fact:
     filebrowser_json: "{{ lookup('template', role_path + '/templates/filebrowser.json.j2') | to_json }}"
     filebrowser_server_url: "{{ filebrowser.server.name }}.{{ common.namespace }}.svc.cluster.local"
@@ -25,4 +7,17 @@
   vars:
     resources: "{{ role_path }}/templates/server/"
     name: "{{ filebrowser.server.name }}"
-    deployment_timeout: 12
+    deployment_timeout: 6
+    storages:
+      - dir: "{{ filebrowser.server.dataStorage.dir }}"
+        mode: "0755"
+        uid: "{{ filebrowser.server.uid }}"
+        gid: "{{ filebrowser.server.gid }}"
+        host: "{{ filebrowser.server.dataStorage.host | default(omit) }}"
+        nfs: "{{ filebrowser.server.dataStorage.nfs | default(omit) }}"
+      - dir: "{{ filebrowser.server.filesStorage.dir }}"
+        mode: "0755"
+        uid: "{{ filebrowser.server.uid }}"
+        gid: "{{ filebrowser.server.gid }}"
+        host: "{{ filebrowser.server.filesStorage.host | default(omit) }}"
+        nfs: "{{ filebrowser.server.filesStorage.nfs | default(omit) }}"

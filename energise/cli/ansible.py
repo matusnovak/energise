@@ -109,7 +109,11 @@ def ansible_runner(args: Args) -> int:
 
     loader = DataLoader()
 
-    context.CLIARGS = ImmutableDict(tags={}, listtags=False, listtasks=False, listhosts=False, syntax=False,
+    tag = 'homelab'
+    if args.experimental:
+        tag = f'experimental_{args.experimental}'
+
+    context.CLIARGS = ImmutableDict(tags={tag}, listtags=False, listtasks=False, listhosts=False, syntax=False,
                                     connection='ssh',
                                     module_path=None, forks=100, remote_user=None, private_key_file=None,
                                     ssh_common_args=None, ssh_extra_args=None, sftp_extra_args=None,

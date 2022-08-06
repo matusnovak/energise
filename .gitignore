@@ -162,3 +162,6 @@ cython_debug/
 # Extra dev files
 /___*/
 /decode.py
+/energise.yml
+/registry.yml
+/config.yml
