@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ matrix.nginx.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if matrix.nginx.serviceLabels -%}
+    {{ matrix.nginx.serviceLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if matrix.nginx.serviceAnnotations -%}
+  annotations:
+    {{ matrix.nginx.serviceAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ matrix.nginx.serviceType }}"
+  ports:
+    - port: 80
+      protocol: TCP
+      name: web
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}

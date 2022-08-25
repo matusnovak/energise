@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ send.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if send.server.podAnnotations %}
+      annotations:
+        {{ send.server.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if send.server.podLabels %}
+        {{ send.server.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ send.server.name }}"
+      enableServiceLinks: false
+      securityContext:
+        runAsUser: {{ send.server.uid }}
+        runAsGroup: {{ send.server.gid }}
+        fsGroup: {{ send.server.gid }}
+        allowPrivilegeEscalation: false
+{% if openldap.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ openldap.server.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ send.server.image.name }}:{{ send.server.image.tag }}"
+          imagePullPolicy: "{{ send.server.image.pullPolicy }}"
+          ports:
+            - name: web
+              containerPort: 1443
+              protocol: TCP
+          env:
+            - name: 'DHPARAM_GENERATION'
+              value: 'false'
+            - name: 'NODE_ENV'
+              value: 'production'
+            - name: 'BASE_URL'
+              value: '{{ send.server.subdomain }}.{{ common.domain }}'
+            - name: 'PORT'
+              value: '1443'
+            - name: 'REDIS_HOST'
+              value: '{{ send_redis_url }}'
+            - name: 'REDIS_PASSWORD'
+              value: '{{ send.redis.password }}'
+            - name: 'FILE_DIR'
+              value: '/uploads'
+            - name: EXPIRE_TIMES_SECONDS
+              value: '{{ send.server.limits.expireTimesSeconds }}'
+            - name: DEFAULT_EXPIRE_SECONDS
+              value: '{{ send.server.limits.defaultDownloads }}'
+            - name: DEFAULT_EXPIRE_SECONDS
+              value: '{{ send.server.limits.defaultExpireSeconds }}'
+            - name: MAX_EXPIRE_SECONDS
+              value: '{{ send.server.limits.maxExpireSeconds }}'
+            - name: DOWNLOAD_COUNTS
+              value: '{{ send.server.limits.downloadCounts }}'
+            - name: MAX_DOWNLOADS
+              value: '{{ send.server.limits.maxDownloads }}'
+            - name: MAX_FILE_SIZE
+              value: '{{ send.server.limits.maxFileSize }}'
+{% if send.server.env %}
+            {{ send.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ send.server.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "uploads-volume"
+              mountPath: "/uploads"
+      nodeSelector:
+        {{ send.server.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: "uploads-volume"
+          persistentVolumeClaim:
+            claimName: "{{ send.server.name }}"

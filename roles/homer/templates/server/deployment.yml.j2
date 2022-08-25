@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ homer.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: "{{ config_yml | hash('md5') }}"
+{% if homer.server.podAnnotations %}
+        {{ homer.server.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if homer.server.podLabels %}
+        {{ homer.server.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ homer.server.name }}"
+      enableServiceLinks: false
+      securityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+{% if openldap.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ openldap.server.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ homer.server.image.name }}:{{ homer.server.image.tag }}"
+          imagePullPolicy: "{{ homer.server.image.pullPolicy }}"
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+{% if homer.server.env %}
+          env:
+            {{ homer.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ homer.server.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: "/www/assets/config.yml"
+              subPath: "config.yml"
+              readOnly: true
+      nodeSelector:
+        {{ homer.server.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ homer.server.name }}"
+            optional: false
+            items:
+              - key: "config.yml"
+                path: "config.yml"

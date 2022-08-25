@@ -1,6 +1,0 @@
-- name: "Include common"
-  include_role:
-    name: common
-
-- name: "Deploy server"
-  include_tasks: "server.yml"

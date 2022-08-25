@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ matrix.synapse.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  resources:
+    requests:
+      storage: "{{ matrix.synapse.storage.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  volumeName: "{{ common.namespace }}-{{ matrix.synapse.name }}"

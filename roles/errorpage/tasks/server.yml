@@ -1,0 +1,11 @@
+- name: "Set errorpage server facts"
+  set_fact:
+    errorpage_server_url: "{{ errorpage.server.name }}.{{ common.namespace }}.svc.cluster.local"
+
+- name: "Run deployment"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/server/"
+    name: "{{ errorpage.server.name }}"
+    deployment_timeout: 6
+    storages: []

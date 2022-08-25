@@ -1,6 +1,0 @@
-allow_duplicates: false
-
-dependencies:
-  - role: common
-  - role: openldap
-    when: traefik.server.auth.enabled

@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ send.redis.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if send.redis.podAnnotations %}
+      annotations:
+        {{ send.redis.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if send.redis.podLabels %}
+        {{ send.redis.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ send.redis.name }}"
+      securityContext:
+        allowPrivilegeEscalation: false
+{% if send.redis.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ send.redis.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ send.redis.image.name }}:{{ send.redis.image.tag }}"
+          imagePullPolicy: "{{ send.redis.image.pullPolicy }}"
+          command:
+            - 'redis-server'
+          args:
+            - '--requirepass'
+            - '{{ send.redis.password }}'
+{% if send.redis.env %}
+          env:
+            {{ send.redis.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - "redis-cli"
+                - "ping"
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ send.redis.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/data"
+      nodeSelector:
+        {{ send.redis.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: "data-volume"
+          persistentVolumeClaim:
+            claimName: "{{ send.redis.name }}"

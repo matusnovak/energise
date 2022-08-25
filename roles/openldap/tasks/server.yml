@@ -1,0 +1,30 @@
+- name: "Set openldap server facts"
+  set_fact:
+    openldap_server_url: "{{ openldap.server.name }}.{{ common.namespace }}.svc.cluster.local"
+    job_sh: "{{ lookup('template', role_path + '/templates/job.sh.j2') }}"
+    users_ldif: "{{ lookup('template', role_path + '/templates/users.ldif.j2') }}"
+    groups_ldif: "{{ lookup('template', role_path + '/templates/groups.ldif.j2') }}"
+    posix_ldif: "{{ lookup('template', role_path + '/templates/posix.ldif.j2') }}"
+    openldap_users_ou: "ou=users"
+    openldap_groups_ou: "ou=groups"
+    openldap_users_dn: "ou=users,{{ common.domainComponent }}"
+    openldap_groups_dn: "ou=groups,{{ common.domainComponent }}"
+    openldap_admin_user_dn: "cn=admin,{{ common.domainComponent }}"
+    openldap_readonly_user_dn: "cn=readonly,{{ common.domainComponent }}"
+    openldap_container_add_group_path: "{{ role_path }}/templates/containers/add_group.yml.j2"
+
+- name: "Run deployment"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/server/"
+    name: "{{ openldap.server.name }}"
+    deployment_timeout: 12
+    storages:
+      - dir: "{{ openldap.server.storage.dir }}/config"
+        mode: "0700"
+        uid: 911
+        gid: 911
+      - dir: "{{ openldap.server.storage.dir }}/data"
+        mode: "0700"
+        uid: 911
+        gid: 911

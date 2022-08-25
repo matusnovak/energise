@@ -1,7 +1,0 @@
-allow_duplicates: false
-
-dependencies:
-  - role: authelia
-    when: filebrowser.enabled and filebrowser.server.auth.enabled
-  - role: traefik
-    when: filebrowser.enabled
