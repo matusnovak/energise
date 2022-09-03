@@ -19,6 +19,14 @@ registry:
       # type: string
       pullPolicy: "IfNotPresent"
 
+    # The user ID to run this registry at.
+    # type: integer
+    uid: 1000
+
+    # The group ID to run this registry at.
+    # type: integer
+    gid: 1000
+
     # The registry HTTP API port.
     # type: integer
     port: 5443

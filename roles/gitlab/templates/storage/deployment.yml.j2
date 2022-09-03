@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ gitlab.storage.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if gitlab.storage.podAnnotations %}
+      annotations:
+        {{ gitlab.storage.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if gitlab.storage.podLabels %}
+        {{ gitlab.storage.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ gitlab.storage.name }}"
+      securityContext:
+        runAsUser: {{ gitlab.storage.uid }}
+        runAsGroup: {{ gitlab.storage.gid }}
+        fsGroup: {{ gitlab.storage.gid }}
+        allowPrivilegeEscalation: false
+{% if gitlab.storage.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ gitlab.storage.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ gitlab.storage.image.name }}:{{ gitlab.storage.image.tag }}"
+          imagePullPolicy: "{{ gitlab.storage.image.pullPolicy }}"
+          command:
+            - 'sh'
+          args:
+            - '-c'
+            - |
+              id;
+              stat "/export";
+              mkdir -p "/export/{{ gitlab.storage.buckets.registry }}";
+              mkdir -p "/export/{{ gitlab.storage.buckets.pages }}";
+              mkdir -p "/export/{{ gitlab.storage.buckets.terraform }}";
+              mkdir -p "/export/{{ gitlab.storage.buckets.dependency }}";
+              mkdir -p "/export/{{ gitlab.storage.buckets.diffs }}";
+              mkdir -p "/export/{{ gitlab.storage.buckets.lfs }}";
+              mkdir -p "/export/{{ gitlab.storage.buckets.artifacts }}";
+              mkdir -p "/export/{{ gitlab.storage.buckets.uploads }}";
+              mkdir -p "/export/{{ gitlab.storage.buckets.packages }}";
+              mkdir -p "/export/{{ gitlab.storage.buckets.backup }}";
+              minio server "/export";
+          env:
+            - name: "MINIO_ROOT_USER"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ gitlab.storage.name }}"
+                  key: accessKey
+                  optional: false
+            - name: "MINIO_ROOT_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ gitlab.storage.name }}"
+                  key: secretKey
+                  optional: false
+            - name: "MINIO_BROWSER"
+              value: "off"
+            - name: "MINIO_USERNAME"
+              value: "minio"
+            - name: "MINIO_GROUPNAME"
+              value: "minio"
+{% if gitlab.storage.env %}
+            {{ gitlab.storage.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          ports:
+            - name: s3
+              containerPort: 9000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: s3
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: s3
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ gitlab.storage.resources | to_nice_yaml | indent(12) }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data-volume
+              mountPath: /export
+      nodeSelector:
+        {{ gitlab.storage.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ gitlab.storage.name }}"

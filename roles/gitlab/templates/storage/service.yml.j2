@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ gitlab.storage.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if gitlab.storage.serviceLabels -%}
+    {{ gitlab.storage.serviceLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if gitlab.storage.serviceAnnotations -%}
+  annotations:
+    {{ gitlab.storage.serviceAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ gitlab.storage.serviceType }}"
+  ports:
+    - port: 9000
+      protocol: TCP
+      name: s3
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}

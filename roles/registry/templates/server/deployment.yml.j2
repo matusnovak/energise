@@ -28,8 +28,9 @@ spec:
     spec:
       serviceAccountName: "{{ registry.server.name }}"
       securityContext:
-        runAsUser: 1000
-        fsGroup: 1000
+        runAsUser: "{{ registry.server.uid }}"
+        runAsGroup: "{{ registry.server.uid }}"
+        fsGroup: "{{ registry.server.gid }}"
 {% if registry.server.pullSecret is defined %}
       imagePullSecrets:
         - name: "{{ registry.server.pullSecret }}"

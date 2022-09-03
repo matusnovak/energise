@@ -45,5 +45,8 @@
     - role: matrix
       tags: homelab
 
+    - role: gitlab
+      tags: homelab
+
     - role: registry
       tags: experimental_registry

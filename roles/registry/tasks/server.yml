@@ -115,8 +115,9 @@
     deployment_timeout: 6
     storages:
       - dir: "{{ registry.server.storage.dir }}"
+        setup: "{{ registry.server.storage.setup | default(omit) }}"
         mode: "0755"
-        uid: 1000
-        gid: 1000
+        uid: "{{ registry.server.uid }}"
+        gid: "{{ registry.server.gid }}"
         host: "{{ registry.server.storage.host | default(omit) }}"
         nfs: "{{ registry.server.storage.nfs | default(omit) }}"

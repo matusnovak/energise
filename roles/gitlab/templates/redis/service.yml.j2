@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ gitlab.redis.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if gitlab.redis.serviceLabels -%}
+    {{ gitlab.redis.serviceLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if gitlab.redis.serviceAnnotations -%}
+  annotations:
+    {{ gitlab.redis.serviceAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ gitlab.redis.serviceType }}"
+  ports:
+    - port: 6379
+      protocol: TCP
+      name: redis
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}

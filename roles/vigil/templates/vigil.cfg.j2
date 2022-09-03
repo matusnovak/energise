@@ -155,3 +155,59 @@ label = "Send Server"
 mode = "poll"
 replicas = ["http://{{ vigil_proxy_url }}:80/deployment/send-server"]
 {% endif %}
+
+{% if gitlab.enabled %}
+[[probe.service.node]]
+id = "gitlab-redis"
+label = "GitLab Redis"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-redis"]
+
+[[probe.service.node]]
+id = "gitlab-cache"
+label = "GitLab Cache"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-cache"]
+
+[[probe.service.node]]
+id = "gitlab-storage"
+label = "GitLab Storage"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-storage"]
+
+[[probe.service.node]]
+id = "gitlab-kroki"
+label = "GitLab kroki"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki"]
+
+[[probe.service.node]]
+id = "gitlab-kroki-blockdiag"
+label = "GitLab kroki-blockdiag"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki-blockdiag"]
+
+[[probe.service.node]]
+id = "gitlab-kroki-bpmn"
+label = "GitLab kroki-bpmn"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki-bpmn"]
+
+[[probe.service.node]]
+id = "gitlab-kroki-excalidraw"
+label = "GitLab kroki-excalidraw"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki-excalidraw"]
+
+[[probe.service.node]]
+id = "gitlab-kroki-mermaid"
+label = "GitLab kroki-mermaid"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki-mermaid"]
+
+[[probe.service.node]]
+id = "gitlab-server"
+label = "GitLab Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-server"]
+{% endif %}

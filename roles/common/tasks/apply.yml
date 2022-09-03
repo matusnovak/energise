@@ -141,7 +141,7 @@
       namespace: "{{ common.namespace }}"
     register: deployment
     until: (deployment.resources[0].status.readyReplicas | default(0)) >= 1
-    retries: 12
+    retries: 60
     delay: 10
     when: (deployment_timeout | default(0)) > 0
 

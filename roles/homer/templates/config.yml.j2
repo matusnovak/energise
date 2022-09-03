@@ -54,3 +54,10 @@ services:
         tag: "app"
         url: "https://{{ vigil.server.subdomain }}.{{ common.domain }}/"
 {% endif %}
+{% if gitlab.enabled %}
+      - name: "Status"
+        icon: "fa-brands fa-gitlab"
+        subtitle: "Code repository and collaborative software"
+        tag: "app"
+        url: "https://{{ gitlab.server.subdomain }}.{{ common.domain }}/"
+{% endif %}

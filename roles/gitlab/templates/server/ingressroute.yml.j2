@@ -1,0 +1,44 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: "{{ gitlab.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  entryPoints:
+{% if traefik.server.http.enabled %}
+    - web
+{% endif %}
+{% if traefik.server.https.enabled %}
+    - websecure
+{% endif %}
+  routes:
+    - match: "Host(`{{ gitlab.server.subdomain }}.{{ common.domain }}`)"
+      kind: Rule
+      services:
+       - name: "{{ gitlab.server.name }}"
+         namespace: "{{ common.namespace }}"
+         port: 80
+    - match: "Host(`{{ gitlab.server.subdomainRegistry }}.{{ common.domain }}`)"
+      kind: Rule
+      services:
+       - name: "{{ gitlab.server.name }}"
+         namespace: "{{ common.namespace }}"
+         port: 81
+    - match: "HostRegexp(`{{ gitlab.server.subdomainPages }}.{{ common.domain }}`, `{subdomain:[a-z0-9_-]+}.{{ gitlab.server.subdomainPages }}.{{ common.domain }}`)"
+      kind: Rule
+      services:
+       - name: "{{ gitlab.server.name }}"
+         namespace: "{{ common.namespace }}"
+         port: 82
+{% if traefik.server.https.enabled %}
+  tls:
+{% if traefik.server.certs.type == 'resolver' %}
+    certResolver: resolver
+{% endif %}
+    domains:
+      - main: "{{ gitlab.server.subdomainPages }}.{{ common.domain }}"
+        sans: 
+          - "*.{{ gitlab.server.subdomainPages }}.{{ common.domain }}"
+{% endif %}
