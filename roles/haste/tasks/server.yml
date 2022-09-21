@@ -1,0 +1,18 @@
+- name: "Set haste server facts"
+  set_fact:
+    haste_server_url: "{{ haste.server.name }}.{{ common.namespace }}.svc.cluster.local"
+
+- name: "Run deployment"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/server/"
+    name: "{{ haste.server.name }}"
+    deployment_timeout: 12
+    storages:
+      - dir: "{{ haste.server.storage.dir }}"
+        setup: "{{ haste.server.storage.setup | default(omit) }}"
+        host: "{{ haste.server.storage.host | default(omit) }}"
+        nfs: "{{ haste.server.storage.nfs | default(omit) }}"
+        mode: "0700"
+        uid: "{{ haste.server.uid }}"
+        gid: "{{ haste.server.gid }}"

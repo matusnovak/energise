@@ -20,6 +20,11 @@ spec:
        - name: "{{ homer.server.name }}"
          namespace: "{{ common.namespace }}"
          port: 8080
+{% if homer.server.auth.enabled %}
+      middlewares:
+        - name: "{{ traefik.server.name }}-auth"
+          namespace: "{{ common.namespace }}"
+{% endif %}
 {% if traefik.server.https.enabled %}
   tls:
 {% if traefik.server.certs.type == 'resolver' %}

@@ -1,6 +1,6 @@
 ---
 photoprism:
-  # Enable Adminer app?
+  # Enable PhotoPrism app?
   # type: boolean
   enabled: false
 

@@ -53,6 +53,10 @@ access_control:
       subject: "group:{{ adminer.server.auth.group }}"
       policy: "one_factor"
 {% endif %}
+{% if homer is defined %}
+    - domain: "{{ common.domain }}"
+      policy: "one_factor"
+{% endif %}
 {% if filebrowser is defined %}
     - domain: "{{ filebrowser.server.subdomain }}.{{ common.domain }}"
       subject: "group:{{ filebrowser.server.auth.group }}"
@@ -61,6 +65,16 @@ access_control:
 {% if photoprism is defined %}
     - domain: "{{ photoprism.server.subdomain }}.{{ common.domain }}"
       subject: "group:{{ photoprism.server.auth.group }}"
+      policy: "one_factor"
+{% endif %}
+{% if qbittorrent is defined %}
+    - domain: "{{ qbittorrent.server.subdomain }}.{{ common.domain }}"
+      subject: "group:{{ qbittorrent.server.auth.group }}"
+      policy: "one_factor"
+{% endif %}
+{% if haste is defined %}
+    - domain: "{{ haste.server.subdomain }}.{{ common.domain }}"
+      subject: "group:{{ haste.server.auth.group }}"
       policy: "one_factor"
 {% endif %}
 authentication_backend:

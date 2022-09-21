@@ -10,6 +10,9 @@
     deployment_timeout: 12
     storages:
       - dir: "{{ photoprism.server.storage.dir }}"
-        mode: "0770"
+        setup: "{{ photoprism.server.storage.setup | default(omit) }}"
+        host: "{{ photoprism.server.storage.host | default(omit) }}"
+        nfs: "{{ photoprism.server.storage.nfs | default(omit) }}"
+        mode: "0775"
         uid: 1000
         gid: 1000

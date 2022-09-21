@@ -103,7 +103,6 @@ spec:
             - name: PHOTOPRISM_SITE_AUTHOR
               value: ""
 {% if photoprism.server.env %}
-          env:
             {{ photoprism.server.env | to_nice_yaml | indent(12) }}
 {% endif %}
           ports:

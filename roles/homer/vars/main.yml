@@ -23,6 +23,17 @@ homer:
       # type: string
       pullPolicy: "IfNotPresent"
 
+    # Authentication options.
+    auth:
+      # Use Authelia authentication for the web GUI? This will utilize LDAP.
+      # type: boolean
+      enabled: true
+
+      # LDAP group that the user must belong to.
+      # This group will be created automatically if it does not exist.
+      # type: string
+      group: "homer"
+
     # Additional environment variables for the pod.
     # type: map
     # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]

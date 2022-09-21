@@ -211,3 +211,55 @@ label = "GitLab Server"
 mode = "poll"
 replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-server"]
 {% endif %}
+
+{% if onlyoffice.enabled %}
+[[probe.service.node]]
+id = "onlyoffice-redis"
+label = "ONLYOFFICE Redis"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/onlyoffice-redis"]
+
+[[probe.service.node]]
+id = "onlyoffice-rabbitmq"
+label = "ONLYOFFICE RabbitMQ"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/onlyoffice-rabbitmq"]
+
+[[probe.service.node]]
+id = "onlyoffice-server"
+label = "ONLYOFFICE Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/onlyoffice-server"]
+{% endif %}
+
+{% if qbittorrent.enabled %}
+[[probe.service.node]]
+id = "qbittorrent-server"
+label = "qBittorrent Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/qbittorrent-server"]
+{% endif %}
+
+{% if haste.enabled %}
+[[probe.service.node]]
+id = "haste-server"
+label = "Haste Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/haste-server"]
+{% endif %}
+
+{% if hedgedoc.enabled %}
+[[probe.service.node]]
+id = "hedgedoc-server"
+label = "HedgeDoc Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/hedgedoc-server"]
+{% endif %}
+
+{% if drawio.enabled %}
+[[probe.service.node]]
+id = "drawio-server"
+label = "Drawio Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/drawio-server"]
+{% endif %}

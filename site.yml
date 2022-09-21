@@ -30,6 +30,15 @@
     - role: authelia
       tags: homelab
 
+    - role: haste
+      tags: homelab
+
+    - role: hedgedoc
+      tags: homelab
+
+    - role: drawio
+      tags: homelab
+
     - role: filebrowser
       tags: homelab
 
@@ -46,6 +55,15 @@
       tags: homelab
 
     - role: gitlab
+      tags: homelab
+
+    - role: onlyoffice
+      tags: homelab
+
+    - role: qbittorrent
+      tags: homelab
+
+    - role: joplin
       tags: homelab
 
     - role: registry

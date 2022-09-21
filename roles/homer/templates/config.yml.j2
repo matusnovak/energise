@@ -4,13 +4,13 @@ subtitle: "Dashboard"
 icon: "fas fa-server"
 
 header: true
-footer: '<p>Created with <span class="has-text-danger">❤️</span> with <a href="https://bulma.io/">bulma</a>, <a href="https://vuejs.org/">vuejs</a> & <a href="https://fontawesome.com/">font awesome</a> // Fork me on <a href="https://github.com/bastienwirtz/homer"><i class="fab fa-github-alt"></i></a></p>' # set false if you want to hide it.
+footer: false
 
 columns: "3"
 connectivityCheck: false
 
 defaults:
-  layout: columns
+  layout: list
   colorTheme: auto
 
 theme: default
@@ -55,9 +55,44 @@ services:
         url: "https://{{ vigil.server.subdomain }}.{{ common.domain }}/"
 {% endif %}
 {% if gitlab.enabled %}
-      - name: "Status"
+      - name: "GitLab"
         icon: "fa-brands fa-gitlab"
         subtitle: "Code repository and collaborative software"
         tag: "app"
         url: "https://{{ gitlab.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if onlyoffice.enabled %}
+      - name: "ONLYOFFICE"
+        icon: "fa-regular fa-file-lines"
+        subtitle: "Feature-rich web-based office suite"
+        tag: "app"
+        url: "https://{{ onlyoffice.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if qbittorrent.enabled %}
+      - name: "qBittorrent"
+        icon: "fa-solid fa-cloud-arrow-down"
+        subtitle: "Cross-platform free and open-source BitTorrent client"
+        tag: "app"
+        url: "https://{{ qbittorrent.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if haste.enabled %}
+      - name: "Hastebin"
+        icon: "fa-solid fa-file-pen"
+        subtitle: "Haste is an open-source pastebin software"
+        tag: "app"
+        url: "https://{{ haste.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if hedgedoc.enabled %}
+      - name: "HedgeDoc"
+        icon: "fa-brands fa-markdown"
+        subtitle: "The best platform to write and share markdown"
+        tag: "app"
+        url: "https://{{ hedgedoc.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if drawio.enabled %}
+      - name: "Draw.io"
+        icon: "fa-solid fa-pen-nib"
+        subtitle: "Diagramming/whiteboarding visualization application"
+        tag: "app"
+        url: "https://{{ drawio.server.subdomain }}.{{ common.domain }}/"
 {% endif %}
