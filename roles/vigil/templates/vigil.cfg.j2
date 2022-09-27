@@ -263,3 +263,11 @@ label = "Drawio Server"
 mode = "poll"
 replicas = ["http://{{ vigil_proxy_url }}:80/deployment/drawio-server"]
 {% endif %}
+
+{% if joplin.enabled %}
+[[probe.service.node]]
+id = "joplin-server"
+label = "Joplin Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/joplin-server"]
+{% endif %}

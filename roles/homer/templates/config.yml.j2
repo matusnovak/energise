@@ -96,3 +96,10 @@ services:
         tag: "app"
         url: "https://{{ drawio.server.subdomain }}.{{ common.domain }}/"
 {% endif %}
+{% if joplin.enabled %}
+      - name: "Joplin Server"
+        icon: "fa-solid fa-book"
+        subtitle: "Sync server for Joplin a note taking application"
+        tag: "app"
+        url: "https://{{ joplin.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
