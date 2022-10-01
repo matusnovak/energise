@@ -1,7 +1,12 @@
 - hosts: hosts
   roles:
     - role: common
-      tags: homelab
+      tags: 
+        - homelab
+        - registry
+
+    - role: registry
+      tags: registry
 
     - role: postgres
       tags: homelab
@@ -28,6 +33,9 @@
       tags: homelab
 
     - role: authelia
+      tags: homelab
+
+    - role: syncthing
       tags: homelab
 
     - role: haste
@@ -66,5 +74,3 @@
     - role: joplin
       tags: homelab
 
-    - role: registry
-      tags: experimental_registry
