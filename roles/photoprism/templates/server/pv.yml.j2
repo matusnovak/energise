@@ -1,14 +1,59 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: "{{ common.namespace }}-{{ photoprism.server.name }}"
+  name: "{{ common.namespace }}-{{ photoprism.server.name }}-data"
   labels:
     {{ service.extraLabels | to_nice_yaml | indent(4) }}
 spec:
   storageClassName: "{{ common.storage.class }}"
   capacity:
-    storage: "{{ photoprism.server.storage.capacity }}"
+    storage: "{{ photoprism.server.storageData.capacity }}"
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
-  {{ lookup('template', pv_storage_spec, template_vars=dict(storage=photoprism.server.storage)) | indent(2) }}
+  {{ lookup('template', pv_storage_spec, template_vars=dict(storage=photoprism.server.storageData)) | indent(2) }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: "{{ common.namespace }}-{{ photoprism.server.name }}-originals"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  capacity:
+    storage: "{{ photoprism.server.storageOriginals.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  {{ lookup('template', pv_storage_spec, template_vars=dict(storage=photoprism.server.storageOriginals)) | indent(2) }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: "{{ common.namespace }}-{{ photoprism.server.name }}-import"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  capacity:
+    storage: "{{ photoprism.server.storageImport.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  {{ lookup('template', pv_storage_spec, template_vars=dict(storage=photoprism.server.storageImport)) | indent(2) }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: "{{ common.namespace }}-{{ photoprism.server.name }}-export"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  capacity:
+    storage: "{{ photoprism.server.storageExport.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  {{ lookup('template', pv_storage_spec, template_vars=dict(storage=photoprism.server.storageExport)) | indent(2) }}

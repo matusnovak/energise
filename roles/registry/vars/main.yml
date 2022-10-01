@@ -1,5 +1,7 @@
 # experimental: true
 registry:
+  enabled: false
+
   server:
     # Name of the component.
     # type: string

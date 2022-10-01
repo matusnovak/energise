@@ -27,8 +27,8 @@ spec:
     spec:
       serviceAccountName: "{{ photoprism.server.name }}"
       securityContext:
-        runAsUser: 1000
-        fsGroup: 1000
+        runAsUser: {{ photoprism.server.uid }}
+        fsGroup: {{ photoprism.server.gid }}
         allowPrivilegeEscalation: false
 {% if photoprism.server.pullSecret is defined %}
       imagePullSecrets:
@@ -132,16 +132,24 @@ spec:
           volumeMounts:
             - name: data-volume
               mountPath: "/photoprism/storage"
-              subPath: "storage"
-            - name: data-volume
+            - name: import-volume
               mountPath: "/photoprism/import"
-              subPath: "import"
-            - name: data-volume
+            - name: originals-volume
               mountPath: "/photoprism/originals"
-              subPath: "originals"
+            - name: export-volume
+              mountPath: "/photoprism/export"
       nodeSelector:
         {{ photoprism.server.nodeSelector | to_nice_yaml | indent(8) }}
       volumes:
         - name: data-volume
           persistentVolumeClaim:
-            claimName: "{{ photoprism.server.name }}"
+            claimName: "{{ photoprism.server.name }}-data"
+        - name: import-volume
+          persistentVolumeClaim:
+            claimName: "{{ photoprism.server.name }}-import"
+        - name: originals-volume
+          persistentVolumeClaim:
+            claimName: "{{ photoprism.server.name }}-originals"
+        - name: export-volume
+          persistentVolumeClaim:
+            claimName: "{{ photoprism.server.name }}-export"

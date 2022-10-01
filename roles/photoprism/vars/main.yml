@@ -27,6 +27,14 @@ photoprism:
     # type: string
     subdomain: "photos"
 
+    # The user ID to run this photoprism at.
+    # type: integer
+    uid: 1000
+
+    # The group ID to run this photoprism at.
+    # type: integer
+    gid: 1000
+
     # Database options.
     database:
       # Name of the database. The database will be created if it does not exist.
@@ -53,10 +61,40 @@ photoprism:
       group: "photoprism"
 
     # Storage options.
-    storage:
+    storageData:
+      # Capacity to request.
+      # type: string
+      capacity: "10Gi"
+
+      # Storage subdirectory
+      # type: string
+      dir: "photoprism/server/data"
+
+    # Storage options.
+    storageOriginals:
       # Capacity to request.
       # type: string
       capacity: "20Gi"
+
+      # Storage subdirectory
+      # type: string
+      dir: "photoprism/server/originals"
+
+    # Storage options.
+    storageImport:
+      # Capacity to request.
+      # type: string
+      capacity: "10Gi"
+
+      # Storage subdirectory
+      # type: string
+      dir: "photoprism/server"
+
+    # Storage options.
+    storageExport:
+      # Capacity to request.
+      # type: string
+      capacity: "10Gi"
 
       # Storage subdirectory
       # type: string
