@@ -1,2 +1,5 @@
 - name: "Deploy server"
   include_tasks: "server.yml"
+
+- name: "Deploy backup"
+  include_tasks: "backup.yml"

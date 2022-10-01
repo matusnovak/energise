@@ -2,6 +2,7 @@
   set_fact:
     postgres_server_url: "{{ postgres.server.name }}.{{ common.namespace }}.svc.cluster.local"
     postgres_container_add_database_path: "{{ role_path }}/templates/containers/add_database.yml.j2"
+    postgres_container_wait_database_path: "{{ role_path }}/templates/containers/wait_database.yml.j2"
 
 - name: "Run deployment"
   include_tasks: "roles/common/tasks/apply.yml"
@@ -11,6 +12,9 @@
     deployment_timeout: 12
     storages:
       - dir: "{{ postgres.server.storage.dir }}"
+        setup: "{{ postgres.server.storage.setup | default(omit) }}"
+        host: "{{ postgres.server.storage.host | default(omit) }}"
+        nfs: "{{ postgres.server.storage.nfs | default(omit) }}"
         mode: "0700"
         uid: 999
         gid: 0
