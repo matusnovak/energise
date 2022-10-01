@@ -52,7 +52,7 @@ spec:
               containerPort: 82
               protocol: TCP
             - name: ssh
-              containerPort: {{ gitlab.server.sshPort }}
+              containerPort: 22
               protocol: TCP
           env:
             - name: "GITLAB_OMNIBUS_CONFIG"

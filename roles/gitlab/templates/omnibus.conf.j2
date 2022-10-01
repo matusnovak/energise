@@ -14,7 +14,7 @@ gitlab_rails['db_adapter'] = 'postgresql'
 gitlab_rails['db_encoding'] = 'unicode'
 gitlab_rails['db_host'] = '{{ postgres_server_url }}'
 gitlab_rails['db_password'] = '{{ gitlab.server.database.password }}'
-gitlab_rails['gitlab_shell_ssh_port'] = {{ gitlab.server.sshPort }}
+gitlab_rails['gitlab_shell_ssh_port'] = 22
 gitlab_rails['ldap_enabled'] = true
 gitlab_rails['prevent_ldap_sign_in'] = false
 gitlab_rails['packages_enabled'] = true
@@ -62,6 +62,9 @@ registry['storage'] = {
     'bucket' => 'gitlab-registry-storage',
     'region' => 'eu-central-1',
     'regionendpoint' => 'http://{{ gitlab_storage_url }}:9000'
+  },
+  'redirect' => {
+    'disable' => true
   }
 }
 registry_external_url 'https://{{ gitlab.server.subdomainRegistry }}.{{ common.domain }}'

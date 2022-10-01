@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ gitlab.runner.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+data:
+  config.toml: |
+    {{ runner_config_toml | indent(4) }}
+
+  entrypoint.sh: |
+    {{ runner_entrypoint_sh | indent(4) }}

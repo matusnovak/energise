@@ -33,3 +33,7 @@
 - name: "Deploy server"
   include_tasks: "server.yml"
   when: gitlab.enabled
+
+- name: "Deploy runner"
+  include_tasks: "runner.yml"
+  when: gitlab.enabled and gitlab.runner.token
