@@ -103,3 +103,10 @@ services:
         tag: "app"
         url: "https://{{ joplin.server.subdomain }}.{{ common.domain }}/"
 {% endif %}
+{% if syncthing.enabled %}
+      - name: "Syncthing"
+        icon: "fa-solid fa-rotate"
+        subtitle: "Syncthing is a continuous file synchronization program"
+        tag: "app"
+        url: "https://{{ syncthing.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
