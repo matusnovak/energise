@@ -55,6 +55,12 @@ mode = "poll"
 replicas = ["http://{{ vigil_proxy_url }}:80/deployment/postgres-server"]
 
 [[probe.service.node]]
+id = "postgres-backup"
+label = "PostgreSQL Backup"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/postgres-backup"]
+
+[[probe.service.node]]
 id = "mariadb-server"
 label = "MariaDB Server"
 mode = "poll"
@@ -77,6 +83,14 @@ id = "authelia-redis"
 label = "Authelia Redis"
 mode = "poll"
 replicas = ["http://{{ vigil_proxy_url }}:80/deployment/authelia-redis"]
+
+{% if registry.enabled %}
+[[probe.service.node]]
+id = "registry-server"
+label = "Docker Registry"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/registry-server"]
+{% endif %}
 
 [[probe.service]]
 id = "apps"
@@ -181,6 +195,14 @@ label = "GitLab kroki"
 mode = "poll"
 replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki"]
 
+{% if gitlab.runner.token %}
+[[probe.service.node]]
+id = "gitlab-runner"
+label = "GitLab Runner"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-runner"]
+{% endif %}
+
 [[probe.service.node]]
 id = "gitlab-kroki-blockdiag"
 label = "GitLab kroki-blockdiag"
@@ -270,4 +292,12 @@ id = "joplin-server"
 label = "Joplin Server"
 mode = "poll"
 replicas = ["http://{{ vigil_proxy_url }}:80/deployment/joplin-server"]
+{% endif %}
+
+{% if syncthing.enabled %}
+[[probe.service.node]]
+id = "syncthing-server"
+label = "Syncthing Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/syncthing-server"]
 {% endif %}
