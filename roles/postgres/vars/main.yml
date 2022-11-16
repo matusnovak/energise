@@ -120,7 +120,7 @@ postgres:
       # type: string
       pullPolicy: "IfNotPresent"
 
-    extra: "-Z6 --schema=public --blobs"
+    extra: "--clean"
 
     # The user ID to run this postgres backup at.
     # type: integer

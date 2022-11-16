@@ -41,6 +41,8 @@ spec:
           image: "{{ postgres.backup.image.name }}:{{ postgres.backup.image.tag }}"
           imagePullPolicy: "{{ postgres.backup.image.pullPolicy }}"
           env:
+            - name: POSTGRES_HOST
+              value: "{{ postgres_server_url }}"
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -49,6 +51,8 @@ spec:
                   optional: false
             - name: POSTGRES_USER
               value: "{{ postgres.server.user }}"
+            - name: POSTGRES_CLUSTER
+              value: "TRUE"
             - name: POSTGRES_DB
               value: "{{ postgres.server.database }}"
             - name: POSTGRES_EXTRA_OPTS
@@ -94,7 +98,7 @@ spec:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: data-volume
-              mountPath: /var/lib/postgresql/data
+              mountPath: /backups
       nodeSelector:
         {{ postgres.backup.nodeSelector | to_nice_yaml | indent(8) }}
       volumes:
