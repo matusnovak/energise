@@ -1,0 +1,7 @@
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "server-data"
+  "storage" .Values.postgres.server.storage.data) }}

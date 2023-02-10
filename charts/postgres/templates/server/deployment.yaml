@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.postgres.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.postgres.server.uid }}
+        runAsGroup: {{ .Values.postgres.server.gid }}
+        fsGroup: {{ .Values.postgres.server.gid }}
+      {{- with .Values.postgres.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "server"
+          image: "{{ .Values.postgres.server.image.name }}:{{ .Values.postgres.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.postgres.server.image.pullPolicy }}"
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: password
+                  optional: false
+            - name: POSTGRES_USER
+              value: "{{ .Values.postgres.server.user }}"
+            - name: POSTGRES_DB
+              value: "{{ .Values.postgres.server.database }}"
+          {{- with .Values.postgres.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          args:
+            - '-c'
+            - 'max_connections=256'
+            - '-c'
+            - 'shared_buffers=4096MB'
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - 'sh'
+                - '-c'
+                - 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 1
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - 'sh'
+                - '-c'
+                - 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.postgres.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data-volume
+              mountPath: /var/lib/postgresql/data
+      nodeSelector:
+        {{- toYaml .Values.postgres.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-data"

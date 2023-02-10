@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "backup") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "backup") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "backup"
+      "annotations" .Values.postgres.backup.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-backup"
+      securityContext:
+        runAsUser: {{ .Values.postgres.backup.uid }}
+        runAsGroup: {{ .Values.postgres.backup.gid }}
+        fsGroup: {{ .Values.postgres.backup.gid }}
+      {{- with .Values.postgres.backup.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      initContainers:
+        {{- include "init-postgres-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+      containers:
+        - name: "backup"
+          image: "{{ .Values.postgres.backup.image.name }}:{{ .Values.postgres.backup.image.tag }}"
+          imagePullPolicy: "{{ .Values.postgres.backup.image.pullPolicy }}"
+          env:
+            - name: POSTGRES_HOST
+              value: "{{ .Chart.Name }}-server.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: password
+                  optional: false
+            - name: POSTGRES_USER
+              value: "{{ .Values.postgres.server.user }}"
+            - name: POSTGRES_CLUSTER
+              value: "TRUE"
+            - name: POSTGRES_DB
+              value: "{{ .Values.postgres.server.database }}"
+            - name: POSTGRES_EXTRA_OPTS
+              value: "{{ .Values.postgres.backup.extra }}"
+            - name: SCHEDULE
+              value: "{{ .Values.postgres.backup.schedule }}"
+            - name: BACKUP_KEEP_DAYS
+              value: "{{ .Values.postgres.backup.keepDays }}"
+            - name: BACKUP_KEEP_WEEKS
+              value: "{{ .Values.postgres.backup.keepWeeks }}"
+            - name: BACKUP_KEEP_MONTHS
+              value: "{{ .Values.postgres.backup.keepMonths }}"
+            - name: HEALTHCHECK_PORT
+              value: "8080"
+          {{- with .Values.postgres.backup.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: healthcheck
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: healthcheck
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: healthcheck
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.postgres.backup.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data-volume
+              mountPath: /var/lib/postgresql/data
+      nodeSelector:
+        {{- toYaml .Values.postgres.backup.nodeSelector | nindent 8 }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-backup-data"

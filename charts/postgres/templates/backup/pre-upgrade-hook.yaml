@@ -1,0 +1,7 @@
+{{ include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "backup"
+  "name" "backup-data"
+  "storage" .Values.postgres.backup.storage.data) }}

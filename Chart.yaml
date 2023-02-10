@@ -1,0 +1,9 @@
+apiVersion: v2
+name: homelab
+version: 0.1.0
+dependencies:
+  - name: common
+    repository: file://charts/common
+  - name: postgres
+    repository: file://charts/postgres
+    condition: deploy.postgres

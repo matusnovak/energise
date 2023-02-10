@@ -1,0 +1,30 @@
+global:
+  name: 'Homelab'
+  domain: 'homelab.lan'
+  domainComponent: 'dc=homelab,dc=lan'
+
+  storage:
+    class: 'default'
+    path: /var/energise/data
+
+  # Busybox is used for generic bash scripts in the init containers.
+  busybox:
+    # Docker image options.
+    image:
+      # Image name without the tag.
+      # type: string
+      name: "docker.io/library/busybox"
+
+      # Image tag.
+      # type: string
+      tag: "latest"
+
+      # Image pull policy.
+      # type: string
+      pullPolicy: "IfNotPresent"
+
+deploy:
+  postgres: false
+  openldap: false
+  traefik: false
+  authelia: false

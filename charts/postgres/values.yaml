@@ -1,0 +1,224 @@
+postgres:
+  server:
+    # Docker image for the Postgres server.
+    image:
+      # Image name without the tag.
+      # type: string
+      name: "docker.io/library/postgres"
+
+      # Image tag.
+      # type: string
+      tag: "13"
+
+      # Image pull policy.
+      # type: string
+      pullPolicy: "IfNotPresent"
+
+    # Root database name.
+    # type: string
+    database: "postgres"
+
+    # Root username.
+    # type: string
+    user: "postgres"
+
+    # Root user password.
+    # type: string
+    password: "Password1!"
+
+    # The user ID to run with.
+    # type: integer
+    uid: "999"
+
+    # The group ID to run with.
+    # type: integer
+    gid: "0"
+
+    # Storage options.
+    storage:
+      data:
+        # Capacity to request.
+        # type: string
+        capacity: "20Gi"
+
+        # Storage subdirectory
+        # type: string
+        dir: "postgres/server"
+
+        mode: "700"
+
+    # Additional environment variables for the pod.
+    # type: map
+    # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
+    env: []
+
+    # List of application ports
+    ports:
+      - port: 5432
+        protocol: TCP
+        name: postgres
+
+    # Service related variables
+    service:
+      # The kubernetes service type.
+      # type: string
+      type: "ClusterIP"
+
+      # Additional annotations to add to the service.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      annotations: {}
+
+      # Additional labels to add to the service.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      labels: {}
+    
+    # Pod related variables
+    pod:
+      # Additional annotations to add to the pod.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      annotations: {}
+
+      # Additional labels to add to the pod.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      labels: {}
+
+    # Specify which node or nodes can be used to host this pod.
+    # Leave as an empty map to allow the pod to be spawned anywhere.
+    # type: map
+    # example: { "kubernetes.io/arch": "amd64" }
+    nodeSelector: {}
+
+    # Optionally specify how much of each resource the pod will need.
+    resources:
+      # Maximum limits that the pod can not exceed.
+      # Set to ~ or null to disable the resource limits.
+      limits:
+        # Maximum CPU that the pod can not exceed.
+        # type: string
+        # example: "1000m"
+        cpu: ~
+        # Maximum RAM that the pod can not exceed.
+        # type: string
+        # example: "1024Mi"
+        memory: ~
+      # Requested limits for scheduling the pod on nodes.
+      # Set to ~ or null to disable the resource requests.
+      requests:
+        # The requested amount of CPU
+        # type: string
+        # example: "500m"
+        cpu: ~
+        # The requested amount of CPU
+        # type: string
+        # example: "512Mi"
+        memory: ~
+  backup:
+    # Docker image for the Postgres backup.
+    image:
+      # Image name without the tag.
+      # type: string
+      name: "docker.io/prodrigestivill/postgres-backup-local"
+
+      # Image tag.
+      # type: string
+      tag: "13-alpine"
+
+      # Image pull policy.
+      # type: string
+      pullPolicy: "IfNotPresent"
+
+    extra: "--clean"
+
+    # The user ID to run with.
+    # type: integer
+    uid: "1000"
+
+    # The group ID to run with.
+    # type: integer
+    gid: "1000"
+
+    schedule: "@daily"
+    keepDays: 7
+    keepWeeks: 4
+    keepMonths: 6
+
+    # Storage options.
+    storage:
+      data:
+        # Capacity to request.
+        # type: string
+        capacity: "20Gi"
+
+        # Storage subdirectory
+        # type: string
+        dir: "postgres/backup"
+
+        mode: "755"
+
+    # Additional environment variables for the pod.
+    # type: map
+    # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
+    env: []
+
+    # List of application ports
+    ports:
+      - port: 8080
+        protocol: TCP
+        name: healthcheck
+
+    # Service related variables
+    service:
+      # The kubernetes service type.
+      # type: string
+      type: "ClusterIP"
+
+      # Additional annotations to add to the service.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      annotations: {}
+
+      # Additional labels to add to the service.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      labels: {}
+    
+    # Pod related variables
+    pod:
+      # Additional annotations to add to the pod.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      annotations: {}
+
+      # Additional labels to add to the pod.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      labels: {}
+
+    # Optionally specify how much of each resource the pod will need.
+    resources:
+      # Maximum limits that the pod can not exceed.
+      # Set to ~ or null to disable the resource limits.
+      limits:
+        # Maximum CPU that the pod can not exceed.
+        # type: string
+        # example: "1000m"
+        cpu: ~
+        # Maximum RAM that the pod can not exceed.
+        # type: string
+        # example: "1024Mi"
+        memory: ~
+      # Requested limits for scheduling the pod on nodes.
+      # Set to ~ or null to disable the resource requests.
+      requests:
+        # The requested amount of CPU
+        # type: string
+        # example: "500m"
+        cpu: ~
+        # The requested amount of CPU
+        # type: string
+        # example: "512Mi"
+        memory: ~

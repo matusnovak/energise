@@ -1,7 +1,0 @@
-- name: "Deploy redis"
-  include_tasks: "redis.yml"
-  when: send.enabled
-
-- name: "Deploy server"
-  include_tasks: "server.yml"
-  when: send.enabled

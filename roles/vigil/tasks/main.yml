@@ -1,7 +1,0 @@
-- name: "Deploy proxy"
-  include_tasks: "proxy.yml"
-  when: vigil.enabled
-
-- name: "Deploy server"
-  include_tasks: "server.yml"
-  when: vigil.enabled

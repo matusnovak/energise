@@ -1,2 +1,0 @@
-- name: "Deploy server"
-  include_tasks: "server.yml"
