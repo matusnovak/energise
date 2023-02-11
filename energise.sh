@@ -10,3 +10,5 @@ helm upgrade \
     --namespace homelab \
     --create-namespace \
     homelab "${DIR}"
+
+# helm get manifest --namespace homelab homelab | kubectl get -f -

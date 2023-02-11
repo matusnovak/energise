@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ .Chart.Name }}-{{ .component }}"
+  name: "{{ .Chart.Name }}-{{ .component }}{{ .suffix | default ""}}"
   namespace: "{{ .Release.Namespace }}"
   labels:
     "app.kubernetes.io/managed-by": "{{ .Release.Service }}"
@@ -12,14 +12,6 @@ metadata:
     "app.kubernetes.io/part-of": "{{ .Values.global.name }}"
 spec:
   type: {{ .service.type }}
-{{- with .ports }}
-  ports:
-{{- range . }}
-    - port: {{ .port }}
-      protocol: "{{ .protocol }}"
-      name: "{{ .name }}"
-{{- end }}
-{{- end }}
   selector:
     "app.kubernetes.io/name": "{{ .Chart.Name }}"
     "app.kubernetes.io/instance": "{{ .Chart.Name }}-{{ .component }}"

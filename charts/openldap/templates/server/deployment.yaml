@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.openldap.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.openldap.server.uid }}
+        runAsGroup: {{ .Values.openldap.server.gid }}
+        fsGroup: 911
+      {{- with .Values.openldap.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "server"
+          image: "{{ .Values.openldap.server.image.name }}:{{ .Values.openldap.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.openldap.server.image.pullPolicy }}"
+          env:
+            - name: LDAP_ORGANISATION
+              value: "{{ .Values.openldap.server.organisation }}"
+            - name: LDAP_BASE_DN
+              value: "{{ .Values.global.domainComponent }}"
+            - name: LDAP_DOMAIN
+              value: "{{ .Values.global.domain }}"
+            - name: LDAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: password
+                  optional: false
+            - name: LDAP_REMOVE_CONFIG_AFTER_SETUP
+              value: "false"
+            - name: LDAP_TLS
+              value: "false"
+            - name: LDAP_READONLY_USER
+              value: "true"
+            - name: LDAP_READONLY_USER_USERNAME
+              value: "readonly"
+            - name: LDAP_READONLY_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: readonlyPassword
+                  optional: false
+          {{- with .Values.openldap.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          args:
+            - "--loglevel"
+            - "{{ .Values.openldap.server.log.level }}"
+            - "--copy-service"
+          ports:
+            - name: openldap
+              containerPort: 389
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - 'sh'
+                - '-c'
+                - 'ldapsearch -x -H ldap://127.0.0.1 -b $LDAP_BASE_DN -s sub -D cn=admin,$LDAP_BASE_DN -w $LDAP_ADMIN_PASSWORD'
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 1
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - 'sh'
+                - '-c'
+                - 'ldapsearch -x -H ldap://127.0.0.1 -b $LDAP_BASE_DN -s sub -D cn=admin,$LDAP_BASE_DN -w $LDAP_ADMIN_PASSWORD'
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.openldap.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/var/lib/ldap"
+              subPath: "data"
+            - name: data-volume
+              mountPath: "/etc/ldap/slapd.d"
+              subPath: "config"
+      nodeSelector:
+        {{- toYaml .Values.openldap.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-data"

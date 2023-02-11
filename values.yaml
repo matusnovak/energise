@@ -28,3 +28,4 @@ deploy:
   openldap: false
   traefik: false
   authelia: false
+  phpldapadmin: false

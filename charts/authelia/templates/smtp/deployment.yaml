@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "smtp") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "smtp") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "smtp"
+      "annotations" .Values.authelia.smtp.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-smtp"
+      securityContext:
+        runAsUser: {{ .Values.authelia.smtp.uid }}
+        runAsGroup: {{ .Values.authelia.smtp.gid }}
+        fsGroup: {{ .Values.authelia.smtp.gid }}
+      {{- with .Values.authelia.smtp.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "smtp"
+          image: "{{ .Values.authelia.smtp.image.name }}:{{ .Values.authelia.smtp.image.tag }}"
+          imagePullPolicy: "{{ .Values.authelia.smtp.image.pullPolicy }}"
+          env:
+            - name: "RELAY_NETWORKS"
+              value: ":192.168.0.0/24:10.0.0.0/8:127.0.0.1/24"
+            - name: "DISABLE_IPV6"
+              value: "true"
+            - name: "PORT"
+              value: "587"
+          {{- with .Values.authelia.smtp.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: smtp
+              containerPort: 587
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.authelia.smtp.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/data"
+      nodeSelector:
+        {{- toYaml .Values.authelia.smtp.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "data-volume"
+          emptyDir: {}

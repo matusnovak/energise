@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.traefik.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.traefik.server.uid }}
+        runAsGroup: {{ .Values.traefik.server.gid }}
+        fsGroup: {{ .Values.traefik.server.gid }}
+      {{- with .Values.traefik.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "server"
+          image: "{{ .Values.traefik.server.image.name }}:{{ .Values.traefik.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.traefik.server.image.pullPolicy }}"
+          {{- with .Values.traefik.server.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: traefik
+              containerPort: {{ .Values.traefik.server.port }}
+              protocol: TCP
+            {{- if .Values.traefik.server.http.enabled }}
+            - name: web
+              containerPort: {{ .Values.traefik.server.http.port }}
+              protocol: TCP
+            {{- end }}
+            {{- if .Values.traefik.server.https.enabled }}
+            - name: websecure
+              containerPort: {{ .Values.traefik.server.https.port }}
+              protocol: TCP
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: traefik
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: traefik
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.traefik.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: config-volume
+              mountPath: "/etc/traefik"
+              readOnly: true
+            {{- if eq .Values.traefik.server.certs.type "resolver"  }}
+            - name: acme-volume
+              mountPath: /acme
+            {{- end }}
+            {{- if and (.Values.traefik.server.certs.certFile) (.Values.traefik.server.certs.keyFile) }}
+            - name: certs-volume
+              mountPath: "/certs"
+              readOnly: true
+            {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.traefik.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: "{{ .Chart.Name }}-server"
+            optional: false
+            items:
+              - key: "traefik.yml"
+                path: "traefik.yml"
+        - name: acme-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-data"
+        {{- if and (.Values.traefik.server.certs.certFile) (.Values.traefik.server.certs.keyFile) }}
+        - name: certs-volume
+          secret:
+            secretName: "{{ .Chart.Name }}-server"
+            optional: false
+            items:
+              - key: "cert.pem"
+                path: "{{ .Values.global.domain }}.cert"
+              - key: "key.pem"
+                path: "{{ .Values.global.domain }}.key"
+        {{- end }}

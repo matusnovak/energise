@@ -7,3 +7,21 @@ dependencies:
   - name: postgres
     repository: file://charts/postgres
     condition: deploy.postgres
+    import-values:
+      - child: postgres.server
+        parent: global.postgres.server
+  - name: openldap
+    repository: file://charts/openldap
+    condition: deploy.openldap
+    import-values:
+      - child: openldap.server
+        parent: global.openldap.server
+  - name: traefik
+    repository: file://charts/traefik
+    condition: deploy.traefik
+    import-values:
+      - child: traefik.server
+        parent: global.traefik.server
+  - name: authelia
+    repository: file://charts/authelia
+    condition: deploy.authelia

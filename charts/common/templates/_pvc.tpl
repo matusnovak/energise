@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .Chart.Name }}-{{ .name }}
+  name: {{ .Chart.Name }}-{{ .component }}-{{ .name }}
   namespace: {{ .Release.Namespace }}
   labels:
     "app.kubernetes.io/managed-by": "{{ .Release.Service }}"
@@ -17,5 +17,5 @@ spec:
         storage: "{{ .storage.capacity | default "1Gi" }}"
   accessModes:
     - ReadWriteMany
-  volumeName: {{ .Release.Namespace }}-{{ .Chart.Name }}-{{ .name }}
+  volumeName: {{ .Release.Namespace }}-{{ .Chart.Name }}-{{ .component }}-{{ .name }}
 {{- end }}

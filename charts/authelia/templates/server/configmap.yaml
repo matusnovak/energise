@@ -1,0 +1,78 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+data:
+  "configuration.yml": |
+    server:
+      host: 0.0.0.0
+      port: 9091
+
+    jwt_secret: "{{ .Values.authelia.server.jwtSecret }}"
+
+    log:
+      level: "{{ .Values.authelia.server.log.level }}"
+
+    session:
+      name: authelia_session
+      secret: "{{ .Values.authelia.server.jwtSecret }}"
+      expiration: 3600
+      inactivity: 300
+      domain: "{{ .Values.global.domain }}"
+
+      redis:
+        host: "{{ .Chart.Name }}-redis.{{ .Release.Namespace }}.svc.cluster.local"
+        port: 6379
+        password: "{{ .Values.authelia.redis.password }}"
+
+    storage:
+      encryption_key: "{{ .Values.authelia.server.encryptionKey }}"
+      postgres:
+        host: "postgres-server.{{ .Release.Namespace }}.svc.cluster.local"
+        port: 5432
+        database: "{{ .Values.authelia.server.database.name }}"
+        username: "{{ .Values.authelia.server.database.role }}"
+        password: "{{ .Values.authelia.server.database.password }}"
+        sslmode: "disable"
+
+    regulation:
+      max_retries: 3
+      find_time: 120
+      ban_time: 300
+
+    notifier:
+      disable_startup_check: false
+      smtp:
+        sender: auth@{{ .Values.global.domain }}
+        host: "{{ .Chart.Name }}-smtp.{{ .Release.Namespace }}.svc.cluster.local"
+        port: 587
+        disable_require_tls: true
+
+    access_control:
+      default_policy: deny
+
+      rules:
+        - domain: "{{ .Values.global.domain }}"
+          policy: "one_factor"
+    authentication_backend:
+      password_reset:
+        disable: false
+
+      ldap:
+        url: "ldap://openldap-server.{{ .Release.Namespace }}.svc.cluster.local"
+        start_tls: false
+        implementation: "custom"
+        tls:
+          skip_verify: false
+        base_dn: {{ .Values.global.domainComponent }}
+        username_attribute: uid
+        additional_users_dn: "ou=users"
+        users_filter: "(&({username_attribute}={input})(objectClass=person))"
+        additional_groups_dn: "ou=groups"
+        groups_filter: "(&(uniqueMember={dn})(objectclass=groupOfUniqueNames))"
+        group_name_attribute: "cn"
+        mail_attribute: "mail"
+        display_name_attribute: "cn"
+        user: "cn=admin,{{ .Values.global.domainComponent }}"
+        password: '{{ .Values.global.openldap.server.password }}'

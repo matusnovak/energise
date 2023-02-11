@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ .Chart.Name }}-{{ .component }}-storage-job"
+  name: "{{ .Chart.Name }}-{{ .component }}-{{ .name }}-job"
   namespace: "{{ .Release.Namespace }}"
   labels:
     "app.kubernetes.io/managed-by": "{{ .Release.Service }}"
@@ -14,10 +14,11 @@ metadata:
   annotations:
     "helm.sh/hook": "pre-install,pre-upgrade"
     "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
 spec:
   template:
     metadata:
-      name: "{{ .Chart.Name }}-{{ .name }}-storage-job"
+      name: "{{ .Chart.Name }}-{{ .component }}-{{ .name }}-job"
       labels:
         "app.kubernetes.io/managed-by": "{{ .Release.Service }}"
         "app.kubernetes.io/name": "{{ .Chart.Name }}"

@@ -1,0 +1,62 @@
+{{ $configMapHash := include (print $.Template.BasePath "/server/configmap.yaml") . | sha256sum }}
+apiVersion: batch/v1
+kind: Job
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  ttlSecondsAfterFinished: 30
+  backoffLimit: 1
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.openldap.server.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      initContainers:
+        {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+      containers:
+        - name: job
+          image: "{{ .Values.openldap.server.image.name }}:{{ .Values.openldap.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.openldap.server.image.pullPolicy }}"
+          command:
+            - '/bin/bash'
+            - '/scripts/job.sh'
+          env:
+            - name: LDAP_HOST
+              value: "{{ .Chart.Name }}-server.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: LDAP_USER
+              value: "cn=admin,{{ .Values.global.domainComponent }}"
+            - name: LDAP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: password
+                  optional: false
+            - name: LDAP_BASE
+              value: "{{ .Values.global.domainComponent }}"
+          volumeMounts:
+            - name: config-volume
+              mountPath: "/scripts"
+              readOnly: true
+      restartPolicy: Never
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ .Chart.Name }}-server"
+            optional: false
+            defaultMode: 0755
+            items:
+              - key: "job.sh"
+                path: "job.sh"
+              - key: "users.ldif"
+                path: "users.ldif"
+              - key: "groups.ldif"
+                path: "groups.ldif"
+              - key: "posix.ldif"
+                path: "posix.ldif"

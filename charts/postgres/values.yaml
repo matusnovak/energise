@@ -52,12 +52,6 @@ postgres:
     # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
     env: []
 
-    # List of application ports
-    ports:
-      - port: 5432
-        protocol: TCP
-        name: postgres
-
     # Service related variables
     service:
       # The kubernetes service type.
@@ -163,12 +157,6 @@ postgres:
     # type: map
     # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
     env: []
-
-    # List of application ports
-    ports:
-      - port: 8080
-        protocol: TCP
-        name: healthcheck
 
     # Service related variables
     service:

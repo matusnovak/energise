@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ .Release.Namespace }}-{{ .Chart.Name }}-{{ .name }}
+  name: {{ .Release.Namespace }}-{{ .Chart.Name }}-{{ .component }}-{{ .name }}
   labels:
     "app.kubernetes.io/managed-by": "{{ .Release.Service }}"
     "app.kubernetes.io/name": "{{ .Chart.Name }}"

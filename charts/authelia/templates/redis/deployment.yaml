@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "redis") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "redis") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "redis"
+      "annotations" .Values.authelia.redis.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-redis"
+      securityContext:
+        runAsUser: {{ .Values.authelia.redis.uid }}
+        runAsGroup: {{ .Values.authelia.redis.gid }}
+        fsGroup: {{ .Values.authelia.redis.gid }}
+      {{- with .Values.authelia.redis.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "redis"
+          image: "{{ .Values.authelia.redis.image.name }}:{{ .Values.authelia.redis.image.tag }}"
+          imagePullPolicy: "{{ .Values.authelia.redis.image.pullPolicy }}"
+          {{- with .Values.authelia.redis.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          command:
+            - 'redis-server'
+          args:
+            - '--requirepass'
+            - '{{ .Values.authelia.redis.password }}'
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - "redis-cli"
+                - "ping"
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.authelia.redis.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/data"
+      nodeSelector:
+        {{- toYaml .Values.authelia.redis.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "data-volume"
+          emptyDir: {}

@@ -3,5 +3,8 @@
   "Release" .Release
   "Chart" .Chart
   "component" "backup"
-  "service" .Values.postgres.backup.service
-  "ports" .Values.postgres.backup.ports) }}
+  "service" .Values.postgres.backup.service) }}
+  ports:
+    - port: 8080
+      protocol: "TCP"
+      name: "healthcheck"

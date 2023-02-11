@@ -3,5 +3,8 @@
   "Release" .Release
   "Chart" .Chart
   "component" "server"
-  "service" .Values.postgres.server.service
-  "ports" .Values.postgres.server.ports) }}
+  "service" .Values.postgres.server.service) }}
+  ports:
+    - port: 5432
+      protocol: "TCP"
+      name: "postgres"

@@ -3,5 +3,5 @@
   "Release" .Release
   "Chart" .Chart
   "component" "backup"
-  "name" "backup-data"
+  "name" "data"
   "storage" .Values.postgres.backup.storage.data) }}

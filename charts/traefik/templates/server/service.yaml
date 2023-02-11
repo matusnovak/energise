@@ -1,0 +1,38 @@
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "service" .Values.traefik.server.service) }}
+  ports:
+{{- if .Values.traefik.server.http.enabled }}
+    - port: {{ .Values.traefik.server.http.exposedPort }}
+      targetPort: web
+      protocol: TCP
+      name: web
+{{- end }}
+{{- if .Values.traefik.server.http.enabled }}
+    - port: {{ .Values.traefik.server.https.exposedPort }}
+      targetPort: websecure
+      protocol: TCP
+      name: websecure
+{{- end }}
+---
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "suffix" "-internal"
+  "service" .Values.traefik.server.serviceInternal) }}
+  ports:
+{{- if .Values.traefik.server.http.enabled }}
+    - port: {{ .Values.traefik.server.http.exposedPort }}
+      targetPort: web
+      protocol: TCP
+      name: web
+{{- end }}
+    - port: {{ .Values.traefik.server.port }}
+      targetPort: traefik
+      protocol: TCP
+      name: traefik

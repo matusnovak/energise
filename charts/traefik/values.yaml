@@ -1,0 +1,242 @@
+traefik:
+  server:
+    # Docker image for the Traefik server.
+    image:
+      # Image name without the tag.
+      # type: string
+      name: "docker.io/library/traefik"
+
+      # Image tag.
+      # type: string
+      tag: "v2.8"
+
+      # Image pull policy.
+      # type: string
+      pullPolicy: "IfNotPresent"
+
+    # The traefik port for API and dashboard. Not used for HTTP or HTTPS ingress.
+    # type: integer
+    port: 9000
+
+    # Subdomain at which to host the dashboard. Only used if dashboard is enabled.
+    # type: string
+    subdomain: "traefik"
+
+    # The user ID to run with.
+    # type: integer
+    uid: "1000"
+
+    # The group ID to run with.
+    # type: integer
+    gid: "1000"
+
+    # Http options
+    http:
+      # Enable HTTP port
+      # type: boolean
+      enabled: true
+
+      # Port for the HTTP traffic
+      # type: integer
+      port: 8080
+
+      # Port for the HTTP traffic to the outside world.
+      # type: integer
+      exposedPort: 80
+
+      # Redirect HTTP traeffic to HTTPS?
+      # type: boolean
+      redirect: true
+
+    # Https options.
+    https:
+      # Enable HTTPS port
+      # type: boolean
+      enabled: true
+
+      # Port for HTTPS traffic
+      # type: integer
+      port: 8443
+
+      # Port for the HTTPS traffic to the outside world.
+      # type: integer
+      exposedPort: 443
+
+    # HTTPS certificate settings. Only used if HTTPS is enabled.
+    certs:
+      # What type of TLS to use? Can be either "self-signed" in which case the TLS certificate is generated,
+      # or can be "resolver" in which case the certificate is retrieved from a remote resolver, such as Let's Encrypt.
+      # To use a resolver your homelab must be exposed to the internet.
+      # type: string
+      type: "self-signed"
+
+      # Raw contents of the cert file for TLS.
+      # This only works if type is set to "self-signed".
+      # Leave empty in order for Traefik to generate the certificates by itself.
+      # type: string
+      certFile: ""
+
+      # Raw contents of the key file for TLS.
+      # This only works if type is set to "self-signed".
+      # Leave empty in order for Traefik to generate the key by itself.
+      # type: string
+      keyFile: ""
+
+      # The challenge type for generating certificates via a resolver (ACME).
+      # Can be either "http", "tls", or "dns".
+      # Only used if "certs.type" is set to "resolver".
+      # type: string
+      challenge: "http"
+
+      # The email for the ACME resolver server.
+      # type: string
+      email: "example@homelab.lan"
+
+      # Name of the provider to provision DNS record for generating certificates.
+      # See https://doc.traefik.io/traefik/https/acme/#dnschallenge
+      # You must add appropriate environment variables based on the provider used.
+      # Only used if "certs.type" is set to "resolver".
+      # type: string
+      dnsProvider: "route53"
+
+      # ACME server URL.
+      # Only used if "certs.type" is set to "resolver".
+      # type: string
+      server: "https://acme-v02.api.letsencrypt.org/directory"
+
+      # Certificate duration in hours.
+      # Only used if "certs.type" is set to "resolver".
+      # type: integer
+      duration: 2160 # 90 days
+
+      # The DNS servers to resolve the FQDN authotiry.
+      # type: sequence
+      dnsResolvers:
+        - "1.1.1.1:53"
+        - "8.8.8.8:53"
+
+    # Traefik metrics.
+    metrics:
+      # Enable prometheus metrics? The metrics will be automatically collected and browseable via Grafana.
+      # type: boolean
+      enabled: true
+
+    # Access log options.
+    accessLog:
+      # Enable access logging for all requests?
+      # type: boolean
+      enabled: true
+
+    # Logging options.
+    log:
+      # Log level.
+      # type: string
+      level: "INFO"
+
+    # Dashboard options.
+    dashboard:
+      # Enable the dashboard?
+      # type: boolean
+      enabled: true
+
+    # Authentication options for the dashboard.
+    auth:
+      # Use Authelia authentication for the dashboard? This will utilize LDAP.
+      # type: boolean
+      enabled: true
+
+      # LDAP group that the user must belong to.
+      # This group will be created automatically if it does not exist.
+      # type: string
+      group: "traefik"
+
+    # Storage options for the certificates.
+    storage:
+      data:
+        # Capacity to request.
+        # type: string
+        capacity: "100Mi"
+
+        # Storage subdirectory
+        # type: string
+        dir: "traefik/server"
+
+    # Additional environment variables for the pod.
+    # type: map
+    # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
+    env: []
+
+    # Service related variables
+    service:
+      # The kubernetes service type.
+      # type: string
+      type: "LoadBalancer"
+
+      # Additional annotations to add to the service.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      annotations: {}
+
+      # Additional labels to add to the service.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      labels: {}
+
+    # The kubernetes service type for the internal port.
+    serviceInternal:
+      # The kubernetes service type.
+      # type: string
+      type: "ClusterIP"
+
+      # Additional annotations to add to the service.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      annotations: {}
+
+      # Additional labels to add to the service.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      labels: {}
+    
+    # Pod related variables
+    pod:
+      # Additional annotations to add to the pod.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      annotations: {}
+
+      # Additional labels to add to the pod.
+      # type: map
+      # example: { "example.com/hello": "world" }
+      labels: {}
+
+    # Specify which node or nodes can be used to host this pod.
+    # Leave as an empty map to allow the pod to be spawned anywhere.
+    # type: map
+    # example: { "kubernetes.io/arch": "amd64" }
+    nodeSelector: {}
+
+    # Optionally specify how much of each resource the pod will need.
+    resources:
+      # Maximum limits that the pod can not exceed.
+      # Set to ~ or null to disable the resource limits.
+      limits:
+        # Maximum CPU that the pod can not exceed.
+        # type: string
+        # example: "1000m"
+        cpu: ~
+        # Maximum RAM that the pod can not exceed.
+        # type: string
+        # example: "1024Mi"
+        memory: ~
+      # Requested limits for scheduling the pod on nodes.
+      # Set to ~ or null to disable the resource requests.
+      requests:
+        # The requested amount of CPU
+        # type: string
+        # example: "500m"
+        cpu: ~
+        # The requested amount of CPU
+        # type: string
+        # example: "512Mi"
+        memory: ~

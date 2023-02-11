@@ -1,0 +1,30 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "suffix" "-auth") }}
+spec:
+  forwardAuth:
+    address: "http://authelia-server.{{ .Release.Namespace }}.svc.cluster.local:9091/api/verify?rd=https://auth.{{ .Values.global.domain }}/"
+    trustForwardHeader: true
+    authResponseHeaders:
+      - "Remote-User"
+      - "Remote-Groups"
+{{- if .Values.traefik.server.http.redirect }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "suffix" "-http-redirect") }}
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+{{- end }}

@@ -1,0 +1,89 @@
+{{ $configMapHash := include (print $.Template.BasePath "/server/configmap.yaml") . | sha256sum }}
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.authelia.server.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      enableServiceLinks: false
+      securityContext:
+        runAsUser: {{ .Values.authelia.server.uid }}
+        runAsGroup: {{ .Values.authelia.server.gid }}
+        fsGroup: {{ .Values.authelia.server.gid }}
+      {{- with .Values.authelia.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      initContainers:
+        {{- include "init-postgres-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+        {{- include "init-postgres-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "database" .Values.authelia.server.database) | nindent 8 }}
+        {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+      containers:
+        - name: "server"
+          image: "{{ .Values.authelia.server.image.name }}:{{ .Values.authelia.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.authelia.server.image.pullPolicy }}"
+          {{- with .Values.authelia.server.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 9091
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.authelia.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: "/config"
+              readOnly: true
+            - name: "notification-volume"
+              mountPath: "/notification"
+      nodeSelector:
+        {{- toYaml .Values.authelia.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ .Chart.Name }}-server"
+            optional: false
+            items:
+              - key: "configuration.yml"
+                path: "configuration.yml"
+        - name: "notification-volume"
+          emptyDir: {}

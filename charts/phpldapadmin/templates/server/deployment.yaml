@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.phpldapadmin.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.phpldapadmin.server.uid }}
+        runAsGroup: {{ .Values.phpldapadmin.server.gid }}
+        fsGroup: {{ .Values.phpldapadmin.server.gid }}
+      {{- with .Values.phpldapadmin.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "server"
+          image: "{{ .Values.phpldapadmin.server.image.name }}:{{ .Values.phpldapadmin.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.phpldapadmin.server.image.pullPolicy }}"
+          env:
+            - name: PHPLDAPADMIN_LDAP_HOSTS
+              value: "#PYTHON2BASH:[{'openldap-server.{{ .Release.Namespace }}.svc.cluster.local': [{'server': [{'tls': False}]},{'login': [{'bind_id': 'cn=admin,{{ .Values.global.domainComponent }}'}]}]}]"
+            - name: PHPLDAPADMIN_HTTPS
+              value: "false"
+          {{- with .Values.phpldapadmin.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.phpldapadmin.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+      nodeSelector:
+        {{- toYaml .Values.phpldapadmin.server.nodeSelector | nindent 8 }}
