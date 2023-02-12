@@ -1,0 +1,96 @@
+{{ $configMapHash := include (print $.Template.BasePath "/daemon/configmap.yaml") . | sha256sum }}
+apiVersion: apps/v1
+kind: DaemonSet
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "daemon") }}
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "daemon") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "daemon"
+      "annotations" .Values.promtail.daemon.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-daemon"
+      securityContext:
+        runAsUser: {{ .Values.promtail.daemon.uid }}
+        runAsGroup: {{ .Values.promtail.daemon.gid }}
+        fsGroup: {{ .Values.promtail.daemon.gid }}
+      {{- with .Values.promtail.daemon.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "daemon"
+          image: "{{ .Values.promtail.daemon.image.name }}:{{ .Values.promtail.daemon.image.tag }}"
+          imagePullPolicy: "{{ .Values.promtail.daemon.image.pullPolicy }}"
+          args:
+            - '-config.file=/etc/promtail/config.yml'
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: 'spec.nodeName'
+          {{- with .Values.promtail.daemon.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: metrics
+              containerPort: 3101
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.promtail.daemon.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: "/etc/promtail/config.yml"
+              subPath: "config.yml"
+            - name: pods-volume
+              mountPath: /var/log/pods
+              readOnly: true
+            - name: run
+              mountPath: /run/promtail
+      nodeSelector:
+        {{- toYaml .Values.promtail.daemon.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ .Chart.Name }}-daemon"
+            optional: false
+            items:
+              - key: "config.yml"
+                path: "config.yml"
+        - name: pods-volume
+          hostPath:
+            path: /var/log/pods
+        - name: run
+          hostPath:
+            path: /run/promtail

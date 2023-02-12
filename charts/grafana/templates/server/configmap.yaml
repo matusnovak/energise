@@ -1,0 +1,93 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+data:
+  "grafana.ini": |
+    [server]
+    protocol = http
+    http_port = 3000
+    domain = {{ .Values.grafana.subdomain }}.{{ .Values.global.domain }}
+
+    [remote_cache]
+    type = redis
+    connstr = addr={{ .Chart.Name }}-redis.{{ .Release.Namespace }}.svc.cluster.local:6379,pool_size=100,db=0,ssl=false,password={{ .Values.grafana.redis.password }}
+
+    [analytics]
+    reporting_enabled = false
+
+    [security]
+    disable_initial_admin_creation = true
+    disable_gravatar = true
+
+    [users]
+    allow_sign_up = false
+
+    [auth.anonymous]
+    enabled = false
+
+    [auth.ldap]
+    enabled = true
+    config_file = /etc/grafana/ldap.toml
+    allow_sign_up = true
+
+    [smtp]
+    enabled = true
+    host = {{ .Chart.Name }}-smtp.{{ .Release.Namespace }}.svc.cluster.local:587
+    skip_verify = true
+    from_address = grafana@{{ .Values.global.domain }}
+    from_name = Grafana - {{ .Values.global.name }}
+
+    [log]
+    mode = console
+    level = info
+
+    [external_image_storage]
+    provider = s3
+
+    [external_image_storage.s3]
+    endpoint = {{ .Chart.Name }}-minio.{{ .Release.Namespace }}.svc.cluster.local
+    path_style_access = true
+    bucket = attachments
+    access_key = {{ .Values.grafana.minio.accessKey }}
+    secret_key = {{ .Values.grafana.minio.secretKey }}
+
+  "ldap.toml": |
+    [[servers]]
+    host = "openldap-server.{{ .Release.Namespace }}.svc.cluster.local"
+    port = 389
+    use_ssl = false
+    start_tls = false
+    ssl_skip_verify = false
+    bind_dn = "cn=readonly,{{ .Values.global.domainComponent }}"
+    bind_password = "{{ .Values.global.openldap.server.readonlyPassword }}"
+    search_filter = "(&(memberOf={{ printf "cn=%s,ou=%s,%s" .Values.grafana.server.auth.group "groups" .Values.global.domainComponent }})(uid=%s))"
+    search_base_dns = ["{{ printf "ou=%s,%s" "users" .Values.global.domainComponent }}"]
+
+    [servers.attributes]
+    name = "givenName"
+    surname = "sn"
+    username = "uid"
+    member_of = "memberOf"
+    email =  "mail"
+
+    [[servers.group_mappings]]
+    group_dn = "{{ printf "cn=%s,ou=%s,%s" .Values.grafana.server.auth.group "groups" .Values.global.domainComponent }}"
+    org_role = "Admin"
+
+  "datasources.yml": |
+    apiVersion: 1
+    {{- if or (.Values.global.deploy.loki) }}
+    datasources:
+    {{- if .Values.global.deploy.loki }}
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki-server.{{ .Release.Namespace }}.svc.cluster.local:3100
+        jsonData:
+          maxLines: 1000
+    {{- end }}
+    {{- else }}
+    datasources: []
+    {{- end }}

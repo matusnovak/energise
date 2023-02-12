@@ -1,0 +1,10 @@
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "redis"
+  "service" .Values.grafana.redis.service) }}
+  ports:
+    - port: 6379
+      protocol: "TCP"
+      name: "redis"

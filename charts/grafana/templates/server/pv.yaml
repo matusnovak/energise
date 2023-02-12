@@ -1,0 +1,7 @@
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "data"
+  "storage" .Values.grafana.server.storage.data) }}

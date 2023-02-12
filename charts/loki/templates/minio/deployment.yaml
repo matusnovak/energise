@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "minio") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "minio") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "minio"
+      "annotations" .Values.loki.minio.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-minio"
+      securityContext:
+        runAsUser: {{ .Values.loki.minio.uid }}
+        runAsGroup: {{ .Values.loki.minio.gid }}
+        fsGroup: {{ .Values.loki.minio.gid }}
+      {{- with .Values.loki.minio.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "minio"
+          image: "{{ .Values.loki.minio.image.name }}:{{ .Values.loki.minio.image.tag }}"
+          imagePullPolicy: "{{ .Values.loki.minio.image.pullPolicy }}"
+          command:
+            - 'sh'
+          args:
+            - '-c'
+            - |
+              id;
+              stat "/export";
+              mkdir -p "/export/${MINIO_BUCKET_NAME}";
+              minio server "/export";
+          env:
+            - name: "MINIO_ROOT_USER"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-minio"
+                  key: "accessKey"
+                  optional: false
+            - name: "MINIO_ROOT_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-minio"
+                  key: "secretKey"
+                  optional: false
+            - name: "MINIO_BROWSER"
+              value: "off"
+            - name: "MINIO_BUCKET_NAME"
+              value: "objects"
+            - name: "MINIO_USERNAME"
+              value: "minio"
+            - name: "MINIO_GROUPNAME"
+              value: "minio"
+          {{- with .Values.loki.minio.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: s3
+              containerPort: 9000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: s3
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: s3
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.loki.minio.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/export"
+      nodeSelector:
+        {{- toYaml .Values.loki.minio.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "data-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-minio-data"

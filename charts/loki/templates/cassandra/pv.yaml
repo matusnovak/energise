@@ -1,0 +1,7 @@
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "cassandra"
+  "name" "data"
+  "storage" .Values.loki.cassandra.storage.data) }}

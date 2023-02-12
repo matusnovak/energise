@@ -1,0 +1,13 @@
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "cassandra"
+  "service" .Values.loki.cassandra.service) }}
+  ports:
+    - port: 9042
+      protocol: "TCP"
+      name: "client"
+    - port: 7000
+      protocol: "TCP"
+      name: "transport"

@@ -1,0 +1,114 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "daemon") }}
+data:
+  config.yml: |
+    client:
+      url: http://loki-server.{{ .Release.Namespace }}.svc.cluster.local:3100/loki/api/v1/push
+      batchwait: 1s
+      batchsize: 1048576
+      follow_redirects: false
+      backoff_config:
+        min_period: 500ms
+        max_period: 5m0s
+        max_retries: 10
+      timeout: 10s
+      tenant_id: ""
+
+    server:
+      http_listen_address: ""
+      http_listen_port: 3101
+      http_listen_conn_limit: 0
+      grpc_listen_address: ""
+      grpc_listen_port: 9095
+      grpc_listen_conn_limit: 0
+      log_format: logfmt
+      log_level: info
+      http_path_prefix: ""
+      external_url: ""
+      health_check_target: null
+
+    positions:
+      sync_period: 10s
+      filename: /run/promtail/positions.yaml
+      ignore_invalid_yaml: false
+
+    scrape_configs:
+    - job_name: kubernetes-pods
+      pipeline_stages:
+      - cri: {}
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_controller_name]
+        separator: ;
+        regex: ([0-9a-z-.]+?)(-[0-9a-f]{8,10})?
+        target_label: __tmp_controller_name
+        replacement: $1
+        action: replace
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name, __meta_kubernetes_pod_label_app,
+          __tmp_controller_name, __meta_kubernetes_pod_name]
+        separator: ;
+        regex: ^;*([^;]+)(;.*)?$
+        target_label: app
+        replacement: $1
+        action: replace
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component, __meta_kubernetes_pod_label_component]
+        separator: ;
+        regex: ^;*([^;]+)(;.*)?$
+        target_label: component
+        replacement: $1
+        action: replace
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        separator: ;
+        regex: (.*)
+        target_label: node_name
+        replacement: $1
+        action: replace
+      - source_labels: [__meta_kubernetes_namespace]
+        separator: ;
+        regex: (.*)
+        target_label: namespace
+        replacement: $1
+        action: replace
+      - source_labels: [namespace, app]
+        separator: /
+        regex: (.*)
+        target_label: job
+        replacement: $1
+        action: replace
+      - source_labels: [__meta_kubernetes_pod_name]
+        separator: ;
+        regex: (.*)
+        target_label: pod
+        replacement: $1
+        action: replace
+      - source_labels: [__meta_kubernetes_pod_container_name]
+        separator: ;
+        regex: (.*)
+        target_label: container
+        replacement: $1
+        action: replace
+      - source_labels: [__meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
+        separator: /
+        regex: (.*)
+        target_label: __path__
+        replacement: /var/log/pods/*$1/*.log
+        action: replace
+      - source_labels: [__meta_kubernetes_pod_annotationpresent_kubernetes_io_config_hash,
+          __meta_kubernetes_pod_annotation_kubernetes_io_config_hash, __meta_kubernetes_pod_container_name]
+        separator: /
+        regex: true/(.*)
+        target_label: __path__
+        replacement: /var/log/pods/*$1/*.log
+        action: replace
+      static_configs: []
+      kubernetes_sd_configs:
+      - role: pod
+        kubeconfig_file: ""
+        follow_redirects: true
+        selectors:
+        - role: pod
+    target_config:
+      sync_period: 10s
+      stdin: false

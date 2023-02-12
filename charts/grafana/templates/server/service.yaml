@@ -1,0 +1,10 @@
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "service" .Values.grafana.server.service) }}
+  ports:
+    - port: 3000
+      protocol: "TCP"
+      name: "web"

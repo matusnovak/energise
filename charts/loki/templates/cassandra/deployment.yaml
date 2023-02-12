@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "cassandra") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "cassandra") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "cassandra"
+      "annotations" .Values.loki.cassandra.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-cassandra"
+      securityContext:
+        runAsUser: {{ .Values.loki.cassandra.uid }}
+        runAsGroup: {{ .Values.loki.cassandra.gid }}
+        fsGroup: {{ .Values.loki.cassandra.gid }}
+      {{- with .Values.loki.cassandra.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "cassandra"
+          image: "{{ .Values.loki.cassandra.image.name }}:{{ .Values.loki.cassandra.image.tag }}"
+          imagePullPolicy: "{{ .Values.loki.cassandra.image.pullPolicy }}"
+          env:
+            - name: "CASSANDRA_TRANSPORT_PORT_NUMBER"
+              value: '7000'
+            - name: "CASSANDRA_USER"
+              value: 'cassandra'
+            - name: "CASSANDRA_PASSWORD_SEEDER"
+              value: 'yes'
+            - name: "CASSANDRA_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-cassandra"
+                  key: "password"
+                  optional: false
+            - name: "HEAP_NEWSIZE"
+              value: '128M'
+            - name: "MAX_HEAP_SIZE"
+              value: '1024M'
+          {{- with .Values.loki.cassandra.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: "client"
+              containerPort: 9042
+              protocol: "TCP"
+            - name: "transport"
+              containerPort: 7000
+              protocol: "TCP"
+          livenessProbe:
+            exec:
+              command:
+                - 'bash'
+                - '-c'
+                - '[ $(nodetool statusgossip) = running ]'
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - 'bash'
+                - '-c'
+                - '[ $(nodetool statusgossip) = running ]'
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.loki.cassandra.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/var/lib/cassandra"
+      nodeSelector:
+        {{- toYaml .Values.loki.cassandra.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "data-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-cassandra-data"

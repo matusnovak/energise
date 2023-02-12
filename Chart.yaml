@@ -22,6 +22,9 @@ dependencies:
     import-values:
       - child: traefik.server
         parent: global.traefik.server
+  - name: errorpage
+    repository: file://charts/errorpage
+    condition: global.deploy.errorpage
   - name: authelia
     repository: file://charts/authelia
     condition: global.deploy.authelia
@@ -34,9 +37,24 @@ dependencies:
     import-values:
       - child: phpldapadmin.server
         parent: global.phpldapadmin.server
+  - name: loki
+    repository: file://charts/loki
+    condition: global.deploy.loki
+    import-values:
+      - child: loki.server
+        parent: global.loki.server
+  - name: promtail
+    repository: file://charts/promtail
+    condition: global.deploy.promtail
+    import-values:
+      - child: promtail.daemon
+        parent: global.promtail.daemon
+  - name: grafana
+    repository: file://charts/grafana
+    condition: global.deploy.grafana
+    import-values:
+      - child: grafana.server
+        parent: global.grafana.server
   - name: gatus
     repository: file://charts/gatus
     condition: global.deploy.gatus
-  - name: errorpage
-    repository: file://charts/errorpage
-    condition: global.deploy.errorpage

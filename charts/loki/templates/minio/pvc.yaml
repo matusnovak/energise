@@ -1,0 +1,7 @@
+{{- include "pvc-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "minio"
+  "name" "data"
+  "storage" .Values.loki.minio.storage.data) }}

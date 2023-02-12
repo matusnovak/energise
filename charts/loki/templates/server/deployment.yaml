@@ -1,0 +1,89 @@
+{{ $configMapHash := include (print $.Template.BasePath "/server/configmap.yaml") . | sha256sum }}
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.loki.server.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.loki.server.uid }}
+        runAsGroup: {{ .Values.loki.server.gid }}
+        fsGroup: {{ .Values.loki.server.gid }}
+      {{- with .Values.loki.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "server"
+          image: "{{ .Values.loki.server.image.name }}:{{ .Values.loki.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.loki.server.image.pullPolicy }}"
+          {{- with .Values.loki.server.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 3100
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.loki.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: "/etc/loki/config.yml"
+              subPath: "config.yml"
+            - name: "data-volume"
+              mountPath: "/data/compactor"
+              subPath: "compactor"
+            - name: "data-volume"
+              mountPath: "/data/chunks"
+              subPath: "chunks"
+      nodeSelector:
+        {{- toYaml .Values.loki.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ .Chart.Name }}-server"
+            optional: false
+            items:
+              - key: "config.yml"
+                path: "config.yml"
+        - name: "data-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-data"

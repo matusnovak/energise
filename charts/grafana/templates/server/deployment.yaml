@@ -1,0 +1,99 @@
+{{ $configMapHash := include (print $.Template.BasePath "/server/configmap.yaml") . | sha256sum }}
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.grafana.server.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.grafana.server.uid }}
+        runAsGroup: {{ .Values.grafana.server.gid }}
+        fsGroup: {{ .Values.grafana.server.gid }}
+      {{- with .Values.grafana.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      initContainers:
+        {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.grafana.server.auth.group) | nindent 8 }}
+      containers:
+        - name: "server"
+          image: "{{ .Values.grafana.server.image.name }}:{{ .Values.grafana.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.grafana.server.image.pullPolicy }}"
+          {{- with .Values.grafana.server.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.grafana.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: "/etc/grafana/grafana.ini"
+              subPath: "grafana.ini"
+              readOnly: true
+            - name: "config-volume"
+              mountPath: "/etc/grafana/provisioning/datasources/datasources.yml"
+              subPath: "datasources.yml"
+            - name: "config-volume"
+              mountPath: "/etc/grafana/ldap.toml"
+              subPath: "ldap.toml"
+            - name: "data-volume"
+              mountPath: /var/lib/grafana
+      nodeSelector:
+        {{- toYaml .Values.grafana.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ .Chart.Name }}-server"
+            optional: false
+            items:
+              - key: "grafana.ini"
+                path: "grafana.ini"
+              - key: "datasources.yml"
+                path: "datasources.yml"
+              - key: "ldap.toml"
+                path: "ldap.toml"
+        - name: "data-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-data"

@@ -1,58 +1,39 @@
-authelia:
+loki:
   server:
-    # Docker image for the Authelia server.
+    # Docker image for the Grafana server.
     image:
       # Image name without the tag.
       # type: string
-      name: "docker.io/authelia/authelia"
+      name: "docker.io/grafana/loki"
 
       # Image tag.
       # type: string
-      tag: "4.36"
+      tag: "latest"
 
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
 
-    # Subdomain at which to host the web GUI.
-    # type: string
-    subdomain: "auth"
-
-    # Database options.
-    database:
-      # Name of the database. The database will be created if it does not exist.
-      # type: string
-      name: "authelia"
-
-      # Role for the database. The role will be created if it does not exist.
-      # type: string
-      role: "authelia"
-
-      # Role password for the database.
-      # type: string
-      password: "Password1!"
-
-    # The JWT secret key for user login.
-    # type: string
-    jwtSecret: 'Password1!'
-
-    # The encryption key used to encrypt data in the database. Must be 20 chars or longer.
-    # type: string
-    encryptionKey: 'Password1!Password1!'
-
-    # Logging options.
-    log:
-      # Log level.
-      # type: string
-      level: "info"
-
     # The user ID to run with.
     # type: integer
-    uid: "1000"
+    uid: "10001"
 
     # The group ID to run with.
     # type: integer
-    gid: "1000"
+    gid: "10001"
+
+    # Storage options.
+    storage:
+      data:
+        # Capacity to request.
+        # type: string
+        capacity: "1Gi"
+
+        # Storage subdirectory
+        # type: string
+        dir: "loki/server"
+
+        mode: "700"
 
     # Additional environment variables for the pod.
     # type: map
@@ -118,12 +99,12 @@ authelia:
         # example: "512Mi"
         memory: ~
 
-  redis:
-    # Docker image for the redis cache.
+  minio:
+    # Docker image for the MinIO S3 storage.
     image:
       # Image name without the tag.
       # type: string
-      name: "docker.io/library/redis"
+      name: "docker.io/minio/minio"
 
       # Image tag.
       # type: string
@@ -133,10 +114,6 @@ authelia:
       # type: string
       pullPolicy: "IfNotPresent"
 
-    # Password for connecting to the redis.
-    # type: string
-    password: "Password1!"
-
     # The user ID to run with.
     # type: integer
     uid: "1000"
@@ -144,6 +121,27 @@ authelia:
     # The group ID to run with.
     # type: integer
     gid: "1000"
+
+    # Access key, any random string
+    # type: string
+    accessKey: "someAccessKey"
+
+    # Secret key, any random string
+    # type: string
+    secretKey: "Password1!"
+
+    # Storage options.
+    storage:
+      data:
+        # Capacity to request.
+        # type: string
+        capacity: "10Gi"
+
+        # Storage subdirectory
+        # type: string
+        dir: "loki/minio"
+
+        mode: "700"
 
     # Additional environment variables for the pod.
     # type: map
@@ -208,17 +206,17 @@ authelia:
         # type: string
         # example: "512Mi"
         memory: ~
-
-  smtp:
-    # Docker image for the SMTP relay.
+  
+  cassandra:
+    # Docker image for the cassandra storage.
     image:
       # Image name without the tag.
       # type: string
-      name: "docker.io/namshi/smtp"
+      name: "docker.io/library/cassandra"
 
       # Image tag.
       # type: string
-      tag: "latest"
+      tag: "4"
 
       # Image pull policy.
       # type: string
@@ -226,11 +224,26 @@ authelia:
 
     # The user ID to run with.
     # type: integer
-    uid: "0"
+    uid: "1000"
 
     # The group ID to run with.
     # type: integer
-    gid: "0"
+    gid: "1000"
+
+    password: 'Password1!'
+
+    # Storage options.
+    storage:
+      data:
+        # Capacity to request.
+        # type: string
+        capacity: "10Gi"
+
+        # Storage subdirectory
+        # type: string
+        dir: "loki/cassandra"
+
+        mode: "700"
 
     # Additional environment variables for the pod.
     # type: map

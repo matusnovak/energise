@@ -1,0 +1,18 @@
+{{ include "clusterrole-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "daemon") }}
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - 'nodes'
+      - 'nodes/proxy'
+      - 'services'
+      - 'endpoints'
+      - 'pods'
+    verbs:
+      - 'get'
+      - 'list'
+      - 'watch'

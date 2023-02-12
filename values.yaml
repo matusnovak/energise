@@ -11,6 +11,9 @@ global:
     phpldapadmin: false
     gatus: false
     errorpage: false
+    loki: false
+    promtail: false
+    grafana: false
 
   storage:
     class: 'default'

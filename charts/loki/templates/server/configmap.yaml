@@ -1,0 +1,65 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+data:
+  config.yml: |
+    auth_enabled: false
+    ingester:
+      chunk_idle_period: 3m
+      chunk_block_size: 262144
+      chunk_retain_period: 1m
+      max_transfer_retries: 0
+      lifecycler:
+        ring:
+          kvstore:
+            store: inmemory
+          replication_factor: 1
+
+    wal:
+      enabled: true
+      dir: /data/chunks
+
+    server:
+      http_listen_port: 3100
+
+    chunk_store_config:
+      max_look_back_period: 0s
+
+    table_manager:
+      retention_deletes_enabled: false
+      retention_period: 0s
+
+    limits_config:
+      enforce_metric_name: false
+      reject_old_samples: true
+      reject_old_samples_max_age: 168h
+
+    compactor:
+      working_directory: /data/compactor
+      shared_store: s3
+      compaction_interval: 5m
+
+    schema_config:
+      configs:
+      - from: 2020-05-15
+        store: cassandra
+        object_store: s3
+        schema: v11
+        index:
+          prefix: cassandra_table
+          period: 168h
+
+    storage_config:
+      cassandra:
+        username: cassandra
+        password: {{ .Values.loki.cassandra.password }}
+        consistency: LOCAL_ONE
+        addresses: {{ .Chart.Name }}-cassandra.{{ .Release.Namespace }}.svc.cluster.local
+        auth: true
+        keyspace: lokiindex
+
+       aws:
+        s3: s3://{{ .Values.loki.minio.accessKey }}:{{ .Values.loki.minio.secretKey }}@{{ .Chart.Name }}-loki.{{ .Release.Namespace }}.svc.cluster.local/objects
+        s3forcepathstyle: true

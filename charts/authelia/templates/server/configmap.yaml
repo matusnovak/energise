@@ -55,6 +55,9 @@ data:
       rules:
         - domain: "{{ .Values.global.domain }}"
           policy: "one_factor"
+        - domain: "{{ .Values.global.traefik.server.subdomain }}.{{ .Values.global.domain }}"
+          subject: "group:{{ .Values.global.traefik.server.auth.group }}"
+          policy: "one_factor"
     authentication_backend:
       password_reset:
         disable: false
