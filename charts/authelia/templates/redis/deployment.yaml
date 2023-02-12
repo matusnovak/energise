@@ -29,7 +29,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "redis"
+        - name: "{{ .Chart.Name }}-redis"
           image: "{{ .Values.authelia.redis.image.name }}:{{ .Values.authelia.redis.image.tag }}"
           imagePullPolicy: "{{ .Values.authelia.redis.image.pullPolicy }}"
           {{- with .Values.authelia.redis.env }}

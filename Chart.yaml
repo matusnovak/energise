@@ -49,6 +49,12 @@ dependencies:
     import-values:
       - child: promtail.daemon
         parent: global.promtail.daemon
+  - name: prometheus
+    repository: file://charts/prometheus
+    condition: global.deploy.prometheus
+    import-values:
+      - child: prometheus.server
+        parent: global.prometheus.server
   - name: grafana
     repository: file://charts/grafana
     condition: global.deploy.grafana

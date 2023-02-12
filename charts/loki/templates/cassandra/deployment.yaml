@@ -29,7 +29,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "cassandra"
+        - name: "{{ .Chart.Name }}-cassandra"
           image: "{{ .Values.loki.cassandra.image.name }}:{{ .Values.loki.cassandra.image.tag }}"
           imagePullPolicy: "{{ .Values.loki.cassandra.image.pullPolicy }}"
           env:

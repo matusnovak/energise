@@ -13,6 +13,7 @@ global:
     errorpage: false
     loki: false
     promtail: false
+    prometheus: false
     grafana: false
 
   storage:

@@ -28,8 +28,13 @@ spec:
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
+      {{- if .Values.traefik.server.auth.enabled }}
+      initContainers:
+        {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.traefik.server.auth.group) | nindent 8 }}
+      {{- end }}
       containers:
-        - name: "server"
+        - name: "{{ .Chart.Name }}-server"
           image: "{{ .Values.traefik.server.image.name }}:{{ .Values.traefik.server.image.tag }}"
           imagePullPolicy: "{{ .Values.traefik.server.image.pullPolicy }}"
           {{- with .Values.traefik.server.env }}

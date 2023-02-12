@@ -3,12 +3,8 @@
   "Release" .Release
   "Chart" .Chart
   "component" "server"
-  "service" .Values.authelia.server.service
-  "scrape" 9959) }}
+  "service" .Values.prometheus.server.service) }}
   ports:
-    - port: 9091
+    - port: 9090
       protocol: "TCP"
       name: "web"
-    - port: 9959
-      protocol: "TCP"
-      name: "metrics"

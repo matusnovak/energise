@@ -29,7 +29,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "smtp"
+        - name: "{{ .Chart.Name }}-smtp"
           image: "{{ .Values.grafana.smtp.image.name }}:{{ .Values.grafana.smtp.image.tag }}"
           imagePullPolicy: "{{ .Values.grafana.smtp.image.pullPolicy }}"
           env:

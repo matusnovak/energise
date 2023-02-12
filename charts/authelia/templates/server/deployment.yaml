@@ -36,7 +36,7 @@ spec:
         {{- include "init-postgres-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "database" .Values.authelia.server.database) | nindent 8 }}
         {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
       containers:
-        - name: "server"
+        - name: "{{ .Chart.Name }}-server"
           image: "{{ .Values.authelia.server.image.name }}:{{ .Values.authelia.server.image.tag }}"
           imagePullPolicy: "{{ .Values.authelia.server.image.pullPolicy }}"
           {{- with .Values.authelia.server.env }}
@@ -46,6 +46,9 @@ spec:
           ports:
             - name: web
               containerPort: 9091
+              protocol: TCP
+            - name: metrics
+              containerPort: 9959
               protocol: TCP
           livenessProbe:
             httpGet:

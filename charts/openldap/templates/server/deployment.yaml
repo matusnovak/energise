@@ -29,7 +29,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "server"
+        - name: "{{ .Chart.Name }}-server"
           image: "{{ .Values.openldap.server.image.name }}:{{ .Values.openldap.server.image.tag }}"
           imagePullPolicy: "{{ .Values.openldap.server.image.pullPolicy }}"
           env:

@@ -30,7 +30,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "daemon"
+        - name: "{{ .Chart.Name }}-daemon"
           image: "{{ .Values.promtail.daemon.image.name }}:{{ .Values.promtail.daemon.image.tag }}"
           imagePullPolicy: "{{ .Values.promtail.daemon.image.pullPolicy }}"
           args:

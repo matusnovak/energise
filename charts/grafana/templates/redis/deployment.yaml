@@ -29,7 +29,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "redis"
+        - name: "{{ .Chart.Name }}-redis"
           image: "{{ .Values.grafana.redis.image.name }}:{{ .Values.grafana.redis.image.tag }}"
           imagePullPolicy: "{{ .Values.grafana.redis.image.pullPolicy }}"
           {{- with .Values.grafana.redis.env }}

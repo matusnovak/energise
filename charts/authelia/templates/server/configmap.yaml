@@ -14,6 +14,11 @@ data:
     log:
       level: "{{ .Values.authelia.server.log.level }}"
 
+    telemetry:
+      metrics:
+        enabled: true
+        address: "tcp://0.0.0.0:9959"
+
     session:
       name: authelia_session
       secret: "{{ .Values.authelia.server.jwtSecret }}"
@@ -57,6 +62,9 @@ data:
           policy: "one_factor"
         - domain: "{{ .Values.global.traefik.server.subdomain }}.{{ .Values.global.domain }}"
           subject: "group:{{ .Values.global.traefik.server.auth.group }}"
+          policy: "one_factor"
+        - domain: "{{ .Values.global.prometheus.server.subdomain }}.{{ .Values.global.domain }}"
+          subject: "group:{{ .Values.global.prometheus.server.auth.group }}"
           policy: "one_factor"
     authentication_backend:
       password_reset:

@@ -31,7 +31,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "server"
+        - name: "{{ .Chart.Name }}-server"
           image: "{{ .Values.loki.server.image.name }}:{{ .Values.loki.server.image.tag }}"
           imagePullPolicy: "{{ .Values.loki.server.image.pullPolicy }}"
           {{- with .Values.loki.server.env }}

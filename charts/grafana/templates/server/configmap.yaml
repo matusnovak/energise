@@ -78,7 +78,7 @@ data:
 
   "datasources.yml": |
     apiVersion: 1
-    {{- if or (.Values.global.deploy.loki) }}
+    {{- if or (.Values.global.deploy.loki) (.Values.global.deploy.prometheus) }}
     datasources:
     {{- if .Values.global.deploy.loki }}
       - name: Loki
@@ -87,6 +87,16 @@ data:
         url: http://loki-server.{{ .Release.Namespace }}.svc.cluster.local:3100
         jsonData:
           maxLines: 1000
+    {{- end }}
+    {{- if .Values.global.deploy.prometheus }}
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus-server.{{ .Release.Namespace }}.svc.cluster.local:9090
+        basicAuth: false
+        jsonData:
+          graphiteVersion: "1.1"
+          tlsAuth: false
+          tlsAuthWithCACert: false
     {{- end }}
     {{- else }}
     datasources: []

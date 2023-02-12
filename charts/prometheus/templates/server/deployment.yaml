@@ -18,32 +18,37 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "server"
-      "annotations" .Values.grafana.server.pod.annotations
+      "annotations" .Values.prometheus.server.pod.annotations
       "checksum" $configMapHash) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-server"
       securityContext:
-        runAsUser: {{ .Values.grafana.server.uid }}
-        runAsGroup: {{ .Values.grafana.server.gid }}
-        fsGroup: {{ .Values.grafana.server.gid }}
-      {{- with .Values.grafana.server.pullSecret }}
+        runAsUser: {{ .Values.prometheus.server.uid }}
+        runAsGroup: {{ .Values.prometheus.server.gid }}
+        fsGroup: {{ .Values.prometheus.server.gid }}
+      {{- with .Values.prometheus.server.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
+      {{- if .Values.prometheus.server.auth.enabled }}
       initContainers:
         {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
-        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.grafana.server.auth.group) | nindent 8 }}
+        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.prometheus.server.auth.group) | nindent 8 }}
+      {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-server"
-          image: "{{ .Values.grafana.server.image.name }}:{{ .Values.grafana.server.image.tag }}"
-          imagePullPolicy: "{{ .Values.grafana.server.image.pullPolicy }}"
-          {{- with .Values.grafana.server.env }}
+          image: "{{ .Values.prometheus.server.image.name }}:{{ .Values.prometheus.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.prometheus.server.image.pullPolicy }}"
+          args:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--storage.tsdb.path=/prometheus'
+          {{- with .Values.prometheus.server.env }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
             - name: web
-              containerPort: 3000
+              containerPort: 9090
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -64,36 +69,26 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.grafana.server.resources | nindent 12 }}
+            {{- toYaml .Values.prometheus.server.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "config-volume"
-              mountPath: "/etc/grafana/grafana.ini"
-              subPath: "grafana.ini"
+              mountPath: "/etc/prometheus/prometheus.yml"
+              subPath: "prometheus.yml"
               readOnly: true
-            - name: "config-volume"
-              mountPath: "/etc/grafana/provisioning/datasources/datasources.yml"
-              subPath: "datasources.yml"
-            - name: "config-volume"
-              mountPath: "/etc/grafana/ldap.toml"
-              subPath: "ldap.toml"
             - name: "data-volume"
-              mountPath: "/var/lib/grafana"
+              mountPath: "/prometheus"
       nodeSelector:
-        {{- toYaml .Values.grafana.server.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.prometheus.server.nodeSelector | nindent 8 }}
       volumes:
         - name: "config-volume"
           configMap:
             name: "{{ .Chart.Name }}-server"
             optional: false
             items:
-              - key: "grafana.ini"
-                path: "grafana.ini"
-              - key: "datasources.yml"
-                path: "datasources.yml"
-              - key: "ldap.toml"
-                path: "ldap.toml"
+              - key: "prometheus.yml"
+                path: "prometheus.yml"
         - name: "data-volume"
           persistentVolumeClaim:
             claimName: "{{ .Chart.Name }}-server-data"

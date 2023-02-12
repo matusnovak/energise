@@ -29,7 +29,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "server"
+        - name: "{{ .Chart.Name }}-server"
           image: "{{ .Values.phpldapadmin.server.image.name }}:{{ .Values.phpldapadmin.server.image.tag }}"
           imagePullPolicy: "{{ .Values.phpldapadmin.server.image.pullPolicy }}"
           env:

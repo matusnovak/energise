@@ -24,7 +24,8 @@
   "Chart" .Chart
   "component" "server"
   "suffix" "-internal"
-  "service" .Values.traefik.server.serviceInternal) }}
+  "service" .Values.traefik.server.serviceInternal
+  "scrape" .Values.traefik.server.port) }}
   ports:
 {{- if .Values.traefik.server.http.enabled }}
     - port: {{ .Values.traefik.server.http.exposedPort }}

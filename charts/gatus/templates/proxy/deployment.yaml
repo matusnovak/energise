@@ -32,7 +32,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "proxy"
+        - name: "{{ .Chart.Name }}-proxy"
           image: "{{ .Values.gatus.proxy.image.name }}:{{ .Values.gatus.proxy.image.tag }}"
           imagePullPolicy: "{{ .Values.gatus.proxy.image.pullPolicy }}"
           env:

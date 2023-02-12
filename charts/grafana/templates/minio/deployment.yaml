@@ -29,7 +29,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "minio"
+        - name: "{{ .Chart.Name }}-minio"
           image: "{{ .Values.grafana.minio.image.name }}:{{ .Values.grafana.minio.image.tag }}"
           imagePullPolicy: "{{ .Values.grafana.minio.image.pullPolicy }}"
           command:

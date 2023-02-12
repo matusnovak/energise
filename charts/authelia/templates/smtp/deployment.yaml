@@ -29,7 +29,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "smtp"
+        - name: "{{ .Chart.Name }}-smtp"
           image: "{{ .Values.authelia.smtp.image.name }}:{{ .Values.authelia.smtp.image.tag }}"
           imagePullPolicy: "{{ .Values.authelia.smtp.image.pullPolicy }}"
           env:

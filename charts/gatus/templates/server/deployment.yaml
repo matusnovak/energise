@@ -31,7 +31,7 @@ spec:
         - name: "{{ . }}"
       {{- end }}
       containers:
-        - name: "server"
+        - name: "{{ .Chart.Name }}-server"
           image: "{{ .Values.gatus.server.image.name }}:{{ .Values.gatus.server.image.tag }}"
           imagePullPolicy: "{{ .Values.gatus.server.image.pullPolicy }}"
           {{- with .Values.gatus.server.env }}

@@ -3,7 +3,8 @@
   "Release" .Release
   "Chart" .Chart
   "component" "server"
-  "service" .Values.gatus.server.service) }}
+  "service" .Values.gatus.server.service
+  "scrape" 8080) }}
   ports:
     - port: 8080
       protocol: "TCP"
