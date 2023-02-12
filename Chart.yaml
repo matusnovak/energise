@@ -64,3 +64,18 @@ dependencies:
   - name: gatus
     repository: file://charts/gatus
     condition: global.deploy.gatus
+    import-values:
+      - child: gatus.server
+        parent: global.gatus.server
+  - name: adminer
+    repository: file://charts/adminer
+    condition: global.deploy.adminer
+    import-values:
+      - child: adminer.server
+        parent: global.adminer.server
+  - name: homer
+    repository: file://charts/homer
+    condition: global.deploy.homer
+    import-values:
+      - child: homer.server
+        parent: global.homer.server

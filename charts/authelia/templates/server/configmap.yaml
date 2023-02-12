@@ -58,14 +58,23 @@ data:
       default_policy: deny
 
       rules:
-        - domain: "{{ .Values.global.domain }}"
+        {{- if and (.Values.global.deploy.homer) (.Values.global.homer.server.auth.enabled) }}
+        - domain: "{{ .Values.global.homer.server.subdomain }}{{ if .Values.global.homer.server.subdomain }}.{{ end }}{{ .Values.global.domain }}"
+          {{- if .Values.global.homer.server.auth.group }}
+          subject: "group:{{ .Values.global.homer.server.auth.group }}"
+          {{- end }}
           policy: "one_factor"
+        {{- end }}
+        {{- if and (.Values.global.deploy.traefik) (.Values.global.traefik.server.auth.enabled) }}
         - domain: "{{ .Values.global.traefik.server.subdomain }}.{{ .Values.global.domain }}"
           subject: "group:{{ .Values.global.traefik.server.auth.group }}"
           policy: "one_factor"
+        {{- end }}
+        {{- if and (.Values.global.deploy.prometheus) (.Values.global.prometheus.server.auth.enabled) }}
         - domain: "{{ .Values.global.prometheus.server.subdomain }}.{{ .Values.global.domain }}"
           subject: "group:{{ .Values.global.prometheus.server.auth.group }}"
           policy: "one_factor"
+        {{- end }}
     authentication_backend:
       password_reset:
         disable: false

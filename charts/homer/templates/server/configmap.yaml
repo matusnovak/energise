@@ -1,0 +1,82 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+data:
+  "config.yml": |
+    title: "{{ .Values.global.domain }}"
+    subtitle: "Dashboard"
+    icon: "fas fa-server"
+
+    header: true
+    footer: false
+
+    columns: "3"
+    connectivityCheck: false
+
+    defaults:
+      layout: list
+      colorTheme: auto
+
+    theme: {{ .Values.homer.server.theme }}
+
+    services:
+      - name: "System"
+        icon: "fas fa-code-branch"
+        items:
+          {{- if .Values.global.deploy.gatus }}
+          - name: "Status"
+            icon: "fas fa-square-check"
+            subtitle: "Status page"
+            tag: "status"
+            url: "https://{{ .Values.global.gatus.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+          
+          {{- if .Values.global.deploy.grafana }}
+          - name: "Grafana"
+            icon: "fas fa-chart-column"
+            subtitle: "Grafana metrics visualization"
+            tag: "metrics"
+            url: "https://{{ .Values.global.grafana.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+          
+          {{- if .Values.global.deploy.prometheus }}
+          - name: "Prometheus"
+            icon: "fas fa-chart-bar"
+            subtitle: "Prometheus metrics collection"
+            tag: "metrics"
+            url: "https://{{ .Values.global.prometheus.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+
+          {{- if .Values.global.deploy.traefik }}
+          - name: "Traefik"
+            icon: "fas fa-route"
+            subtitle: "Traefik reverse proxy dashboard"
+            tag: "metrics"
+            url: "https://{{ .Values.global.traefik.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+
+          {{- if .Values.global.deploy.authelia }}
+          - name: "Authelia"
+            icon: "fas fa-lock"
+            subtitle: "Authentication frotnend"
+            tag: "auth"
+            url: "https://{{ .Values.global.authelia.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+
+          {{- if .Values.global.deploy.phpldapadmin }}
+          - name: "phpLDAPadmin"
+            icon: "fas fa-users"
+            subtitle: "LDAP users and groups management"
+            tag: "auth"
+            url: "https://{{ .Values.global.phpldapadmin.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+
+          {{- if .Values.global.deploy.adminer }}
+          - name: "Adminer"
+            icon: "fas fa-database"
+            subtitle: "Database management system"
+            tag: "database"
+            url: "https://{{ .Values.global.adminer.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}

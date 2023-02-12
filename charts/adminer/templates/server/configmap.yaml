@@ -188,7 +188,7 @@ data:
           - "[STATUS] == 200"
       {{- end }}
 
-      {{- if .Values.global.deploy.errorpage }}
+      {{- if .Values.global.deploy.prometheus }}
       - name: Error Page Web
         group: Error Page
         url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
@@ -277,7 +277,7 @@ data:
           - "[STATUS] == 200"
       {{- end }}
 
-      {{- if .Values.global.deploy.homer }}
+      {{- if .Values.global.deploy.grafana }}
       - name: Homer Web
         group: Homer
         url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
@@ -295,34 +295,6 @@ data:
       - name: Homer Server
         group: Homer
         url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/homer-server
-        interval: 5m
-        ui:
-          hide-hostname: true
-          hide-url: true
-        client:
-          timeout: 10s
-        conditions:
-          - "[STATUS] == 200"
-      {{- end }}
-
-      {{- if .Values.global.deploy.adminer }}
-      - name: Adminer Web
-        group: Adminer
-        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
-        interval: 5m
-        ui:
-          hide-hostname: true
-          hide-url: true
-        client:
-          insecure: true
-          timeout: 10s
-        headers:
-          "Host": "{{ .Values.global.adminer.server.subdomain }}{{ .Values.global.domain }}"
-        conditions:
-          - "[STATUS] == any(200, 401)"
-      - name: Adminer Server
-        group: Adminer
-        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/adminer-server
         interval: 5m
         ui:
           hide-hostname: true
