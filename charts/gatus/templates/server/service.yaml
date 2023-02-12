@@ -1,0 +1,10 @@
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "service" .Values.gatus.server.service) }}
+  ports:
+    - port: 8080
+      protocol: "TCP"
+      name: "web"

@@ -1,0 +1,84 @@
+{{ $configMapHash := include (print $.Template.BasePath "/proxy/configmap.yaml") . | sha256sum }}
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "proxy") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "proxy") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "proxy"
+      "annotations" .Values.gatus.proxy.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-proxy"
+      enableServiceLinks: false
+      securityContext:
+        runAsUser: {{ .Values.gatus.proxy.uid }}
+        runAsGroup: {{ .Values.gatus.proxy.gid }}
+        fsGroup: {{ .Values.gatus.proxy.gid }}
+      {{- with .Values.gatus.proxy.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "proxy"
+          image: "{{ .Values.gatus.proxy.image.name }}:{{ .Values.gatus.proxy.image.tag }}"
+          imagePullPolicy: "{{ .Values.gatus.proxy.image.pullPolicy }}"
+          env:
+            - name: KUBERNETES_NAMESPACE
+              value: "{{ .Release.Namespace }}"
+          {{- with .Values.gatus.proxy.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.gatus.proxy.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: "/app/main.py"
+              subPath: "main.py"
+              readOnly: true
+      nodeSelector:
+        {{- toYaml .Values.gatus.proxy.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ .Chart.Name }}-proxy"
+            optional: false
+            items:
+              - key: "main.py"
+                path: "main.py"

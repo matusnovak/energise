@@ -1,0 +1,36 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  entryPoints:
+{{- if .Values.global.traefik.server.http.enabled }}
+    - web
+{{- end }}
+{{- if .Values.global.traefik.server.https.enabled }}
+    - websecure
+{{- end }}
+{{- if .Values.global.traefik.server.https.enabled }}
+  tls:
+{{- if eq .Values.global.traefik.server.certs.type "resolver" }}
+    certResolver: resolver
+{{- end }}
+    domains:
+      - main: "{{ .Values.global.domain }}"
+        sans:
+          - "*.{{ .Values.global.domain }}"
+{{- end }}
+  routes:
+    - match: "HostRegexp(`{subdomain:[a-z0-9]+}.{{ .Values.global.domain }}`)"
+      kind: Rule
+      priority: 1
+      services:
+        - name: "{{ .Chart.Name }}-server"
+          namespace: "{{ .Release.Namespace }}"
+          port: 8080
+      middlewares:
+        - name: "{{ .Chart.Name }}-server"
+          namespace: "{{ .Release.Namespace }}"

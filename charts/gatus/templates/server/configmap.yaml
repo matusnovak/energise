@@ -1,0 +1,98 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+data:
+  "config.yaml": |
+    metrics: true
+    endpoints:
+      {{- if .Values.global.deploy.authelia }}
+      - name: Authelia Web
+        group: Authelia
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.authelia.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == any(200)"
+      - name: Authelia Server
+        group: Authelia
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/authelia-server
+        interval: 5m
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      - name: Authelia Redis
+        group: Authelia
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/authelia-redis
+        interval: 5m
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      - name: Authelia SMTP
+        group: Authelia
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/authelia-smtp
+        interval: 5m
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.openldap }}
+      - name: OpenLDAP Server
+        group: OpenLDAP
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/openldap-server
+        interval: 5m
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.phpldapadmin }}
+      - name: phpLDAPAdmin Web
+        group: phpLDAPAdmin
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.phpldapadmin.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == any(200)"
+      - name: phpLDAPAdmin Server
+        group: phpLDAPAdmin
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/phpldapadmin-server
+        interval: 5m
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.postgres }}
+      - name: Postgres Server
+        group: Postgres
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/postgres-server
+        interval: 5m
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      - name: Postgres Backup
+        group: Postgres
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/postgres-backup
+        interval: 5m
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}

@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.errorpage.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.errorpage.server.uid }}
+        runAsGroup: {{ .Values.errorpage.server.gid }}
+        fsGroup: {{ .Values.errorpage.server.gid }}
+      {{- with .Values.errorpage.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "server"
+          image: "{{ .Values.errorpage.server.image.name }}:{{ .Values.errorpage.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.errorpage.server.image.pullPolicy }}"
+          env:
+            - name: TEMPLATE_NAME
+              value: "{{ .Values.errorpage.server.theme }}"
+            - name: SHOW_DETAILS
+              value: "false"
+          {{- with .Values.errorpage.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /404.html
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /404.html
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.errorpage.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+      nodeSelector:
+        {{- toYaml .Values.errorpage.server.nodeSelector | nindent 8 }}

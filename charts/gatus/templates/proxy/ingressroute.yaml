@@ -1,0 +1,12 @@
+{{ include "ingressroute-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "proxy") }}
+  routes:
+    - match: Host(`{{ .Values.gatus.proxy.subdomain }}.{{ .Values.global.domain }}`)
+      kind: Rule
+      services:
+       - name: "{{ .Chart.Name }}-proxy"
+         namespace: "{{ .Release.Namespace }}"
+         port: 8080

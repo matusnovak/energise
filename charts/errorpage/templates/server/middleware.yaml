@@ -1,0 +1,15 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  errors:
+    status:
+      - "400-599"
+    query: "/{status}.html"
+    service:
+      name: "{{ .Chart.Name }}-server"
+      port: 8080

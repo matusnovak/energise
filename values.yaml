@@ -3,6 +3,15 @@ global:
   domain: 'homelab.lan'
   domainComponent: 'dc=homelab,dc=lan'
 
+  deploy:
+    postgres: false
+    openldap: false
+    traefik: false
+    authelia: false
+    phpldapadmin: false
+    gatus: false
+    errorpage: false
+
   storage:
     class: 'default'
     path: /var/energise/data
@@ -22,10 +31,3 @@ global:
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
-
-deploy:
-  postgres: false
-  openldap: false
-  traefik: false
-  authelia: false
-  phpldapadmin: false

@@ -6,22 +6,37 @@ dependencies:
     repository: file://charts/common
   - name: postgres
     repository: file://charts/postgres
-    condition: deploy.postgres
+    condition: global.deploy.postgres
     import-values:
       - child: postgres.server
         parent: global.postgres.server
   - name: openldap
     repository: file://charts/openldap
-    condition: deploy.openldap
+    condition: global.deploy.openldap
     import-values:
       - child: openldap.server
         parent: global.openldap.server
   - name: traefik
     repository: file://charts/traefik
-    condition: deploy.traefik
+    condition: global.deploy.traefik
     import-values:
       - child: traefik.server
         parent: global.traefik.server
   - name: authelia
     repository: file://charts/authelia
-    condition: deploy.authelia
+    condition: global.deploy.authelia
+    import-values:
+      - child: authelia.server
+        parent: global.authelia.server
+  - name: phpldapadmin
+    repository: file://charts/phpldapadmin
+    condition: global.deploy.phpldapadmin
+    import-values:
+      - child: phpldapadmin.server
+        parent: global.phpldapadmin.server
+  - name: gatus
+    repository: file://charts/gatus
+    condition: global.deploy.gatus
+  - name: errorpage
+    repository: file://charts/errorpage
+    condition: global.deploy.errorpage
