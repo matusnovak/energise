@@ -14,6 +14,12 @@ postgres:
       # type: string
       pullPolicy: "IfNotPresent"
 
+    # Automatic update policy with Keel
+    keel:
+      enabled: true
+      policy: "force"
+      matchTag: false
+
     # Root database name.
     # type: string
     database: "postgres"
@@ -124,6 +130,12 @@ postgres:
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
+
+    # Automatic update policy with Keel
+    keel:
+      enabled: true
+      policy: "force"
+      matchTag: false
 
     extra: "--clean"
 

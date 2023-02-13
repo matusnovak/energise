@@ -1,6 +1,4 @@
-apiVersion: apps/v1
-kind: Deployment
-{{ include "metadata-spec" (dict 
+{{ include "deployment-spec" (dict 
   "Values" .Values
   "Release" .Release
   "Chart" .Chart

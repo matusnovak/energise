@@ -317,12 +317,40 @@ data:
           insecure: true
           timeout: 10s
         headers:
-          "Host": "{{ .Values.global.adminer.server.subdomain }}{{ .Values.global.domain }}"
+          "Host": "{{ .Values.global.adminer.server.subdomain }}.{{ .Values.global.domain }}"
         conditions:
           - "[STATUS] == any(200, 401)"
       - name: Adminer Server
         group: Adminer
         url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/adminer-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.keel }}
+      - name: Keel Web
+        group: Keel
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.keel.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == any(200)"
+      - name: Keel Server
+        group: Keel
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/keel-server
         interval: 5m
         ui:
           hide-hostname: true

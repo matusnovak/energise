@@ -1,0 +1,7 @@
+{{- include "pvc-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "storage"
+  "name" "data"
+  "storage" .Values.gitlab.storage.storage.data) }}

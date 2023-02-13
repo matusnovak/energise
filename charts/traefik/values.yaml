@@ -8,11 +8,17 @@ traefik:
 
       # Image tag.
       # type: string
-      tag: "v2.8"
+      tag: "v2.9"
 
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
+
+    # Automatic update policy with Keel
+    keel:
+      enabled: true
+      policy: "force"
+      matchTag: false
 
     # The traefik port for API and dashboard. Not used for HTTP or HTTPS ingress.
     # type: integer

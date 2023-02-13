@@ -8,11 +8,17 @@ prometheus:
 
       # Image tag.
       # type: string
-      tag: "latest"
+      tag: "v2.42.0"
 
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
+
+    # Automatic update policy with Keel
+    keel:
+      enabled: true
+      policy: "force"
+      matchTag: false
 
     # Subdomain at which to host the web GUI.
     # type: string

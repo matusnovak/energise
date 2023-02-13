@@ -8,11 +8,17 @@ grafana:
 
       # Image tag.
       # type: string
-      tag: "latest"
+      tag: "9.3.6"
 
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
+
+    # Automatic update policy with Keel
+    keel:
+      enabled: true
+      policy: "minor"
+      matchTag: false
 
     # Subdomain at which to host the web GUI.
     # type: string
@@ -119,11 +125,17 @@ grafana:
 
       # Image tag.
       # type: string
-      tag: "latest"
+      tag: "7"
 
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
+
+    # Automatic update policy with Keel
+    keel:
+      enabled: true
+      policy: "minor"
+      matchTag: false
 
     # Password for connecting to the redis.
     # type: string
@@ -216,6 +228,12 @@ grafana:
       # type: string
       pullPolicy: "IfNotPresent"
 
+    # Automatic update policy with Keel
+    keel:
+      enabled: true
+      policy: "force"
+      matchTag: false
+
     # The user ID to run with.
     # type: integer
     uid: "0"
@@ -302,6 +320,12 @@ grafana:
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
+
+    # Automatic update policy with Keel
+    keel:
+      enabled: true
+      policy: "force"
+      matchTag: false
 
     # The user ID to run with.
     # type: integer

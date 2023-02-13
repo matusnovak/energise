@@ -39,7 +39,8 @@ data:
         database: "{{ .Values.authelia.server.database.name }}"
         username: "{{ .Values.authelia.server.database.role }}"
         password: "{{ .Values.authelia.server.database.password }}"
-        sslmode: "disable"
+        ssl:
+          mode: "disable"
 
     regulation:
       max_retries: 3

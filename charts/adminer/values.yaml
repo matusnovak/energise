@@ -1,6 +1,6 @@
 adminer:
   server:
-    # Docker image for the Postgres server.
+    # Docker image for the Adminer server.
     image:
       # Image name without the tag.
       # type: string
@@ -8,11 +8,17 @@ adminer:
 
       # Image tag.
       # type: string
-      tag: "4.8.1"
+      tag: "4"
 
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
+
+    # Automatic update policy with Keel
+    keel:
+      enabled: true
+      policy: "force"
+      matchTag: false
 
     # Subdomain at which to host the web GUI.
     # type: string

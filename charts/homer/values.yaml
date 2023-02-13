@@ -8,11 +8,17 @@ homer:
 
       # Image tag.
       # type: string
-      tag: "latest"
+      tag: "v23.02.1"
 
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
+
+    # Automatic update policy with Keel
+    keel:
+      enabled: true
+      policy: "major"
+      matchTag: false
 
     # Subdomain at which to host the web GUI.
     # Leave empty for no subdomain

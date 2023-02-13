@@ -1,7 +1,5 @@
 {{ $configMapHash := include (print $.Template.BasePath "/daemon/configmap.yaml") . | sha256sum }}
-apiVersion: apps/v1
-kind: DaemonSet
-{{ include "metadata-spec" (dict 
+{{ include "daemonset-spec" (dict 
   "Values" .Values
   "Release" .Release
   "Chart" .Chart

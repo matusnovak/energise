@@ -1,0 +1,10 @@
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "cache"
+  "service" .Values.gitlab.cache.service) }}
+  ports:
+    - port: 9000
+      protocol: "TCP"
+      name: "s3"

@@ -73,6 +73,18 @@ dependencies:
     import-values:
       - child: adminer.server
         parent: global.adminer.server
+  - name: gitlab
+    repository: file://charts/gitlab
+    condition: global.deploy.gitlab
+    import-values:
+      - child: gitlab.server
+        parent: global.gitlab.server
+  - name: keel
+    repository: file://charts/keel
+    condition: global.deploy.keel
+    import-values:
+      - child: keel.server
+        parent: global.keel.server
   - name: homer
     repository: file://charts/homer
     condition: global.deploy.homer

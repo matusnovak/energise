@@ -17,6 +17,8 @@ global:
     grafana: false
     homer: false
     adminer: false
+    gitlab: false
+    keel: false
 
   storage:
     class: 'default'

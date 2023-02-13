@@ -80,3 +80,11 @@ data:
             tag: "database"
             url: "https://{{ .Values.global.adminer.server.subdomain }}.{{ .Values.global.domain }}/"
           {{- end }}
+
+          {{- if .Values.global.deploy.keel }}
+          - name: "Keel"
+            icon: "fas fa-cloud-arrow-down"
+            subtitle: "Automate Kubernetes updates"
+            tag: "database"
+            url: "https://{{ .Values.global.keel.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}

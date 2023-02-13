@@ -1,0 +1,5 @@
+{{ include "rolebinding-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "kroki") }}

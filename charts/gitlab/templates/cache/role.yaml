@@ -1,0 +1,5 @@
+{{ include "role-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "cache") }}

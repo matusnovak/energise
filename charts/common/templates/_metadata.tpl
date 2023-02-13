@@ -8,16 +8,13 @@ metadata:
     "app.kubernetes.io/instance": "{{ .Chart.Name }}-{{ .component }}"
     "app.kubernetes.io/version": "{{ .Chart.Version }}"
     "app.kubernetes.io/part-of": "{{ .Values.global.name }}"
+  {{- if or (.checksum) (.annotations) (.keel) }}
+  annotations:
   {{- if .checksum }}
-  annotations:
     "checksum/config": "{{ .checksum }}"
-    {{- if .annotations }}
+  {{- end }}
+  {{- if .annotations }}
     {{- toYaml .annotations | nindent 4 }}
-    {{- end }}
-  {{- else }}
-  {{- with .annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
 {{- end }}
