@@ -1,5 +1,5 @@
 {{- define "init-openldap-wait" -}}
-{{ $openldap := (.Values.openldap | default .Values.global.openldap) -}}
+{{- $openldap := ((.Values.server.isOpenLDAP | default false) | ternary .Values .Values.global.openldap) -}}
 - name: "init-openldap-wait"
   image: "{{ $openldap.server.image.name }}:{{ $openldap.server.image.tag }}"
   imagePullPolicy: "{{ $openldap.server.image.pullPolicy }}"

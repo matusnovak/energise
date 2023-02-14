@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ syncthing.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if syncthing.server.serviceLabels -%}
+    {{ syncthing.server.serviceLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if syncthing.server.serviceAnnotations -%}
+  annotations:
+    {{ syncthing.server.serviceAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ syncthing.server.serviceType }}"
+  ports:
+    - port: 8384
+      protocol: TCP
+      name: web
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ syncthing.server.name }}-sync"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if syncthing.server.serviceSyncLabels -%}
+    {{ syncthing.server.serviceSyncLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if syncthing.server.serviceSyncAnnotations -%}
+  annotations:
+    {{ syncthing.server.serviceSyncAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ syncthing.server.serviceSyncType }}"
+  ports:
+    - port: 22000
+      protocol: TCP
+      name: transfer
+      targetPort: transfer
+    - port: 22000
+      protocol: UDP
+      name: quic
+      targetPort: quic
+    - port: 21027
+      protocol: TCP
+      name: broadcast
+      targetPort: broadcast
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}

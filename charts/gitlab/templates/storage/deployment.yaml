@@ -15,21 +15,21 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "storage"
-      "annotations" .Values.gitlab.storage.pod.annotations) | nindent 4}}
+      "annotations" .Values.storage.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-storage"
       securityContext:
-        runAsUser: {{ .Values.gitlab.storage.uid }}
-        runAsGroup: {{ .Values.gitlab.storage.gid }}
-        fsGroup: {{ .Values.gitlab.storage.gid }}
-      {{- with .Values.gitlab.storage.pullSecret }}
+        runAsUser: {{ .Values.storage.uid }}
+        runAsGroup: {{ .Values.storage.gid }}
+        fsGroup: {{ .Values.storage.gid }}
+      {{- with .Values.storage.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-storage"
-          image: "{{ .Values.gitlab.storage.image.name }}:{{ .Values.gitlab.storage.image.tag }}"
-          imagePullPolicy: "{{ .Values.gitlab.storage.image.pullPolicy }}"
+          image: "{{ .Values.storage.image.name }}:{{ .Values.storage.image.tag }}"
+          imagePullPolicy: "{{ .Values.storage.image.pullPolicy }}"
           command:
             - 'sh'
           args:
@@ -37,16 +37,16 @@ spec:
             - |
               id;
               stat "/export";
-              mkdir -p "/export/{{ .Values.gitlab.storage.buckets.registry }}";
-              mkdir -p "/export/{{ .Values.gitlab.storage.buckets.pages }}";
-              mkdir -p "/export/{{ .Values.gitlab.storage.buckets.terraform }}";
-              mkdir -p "/export/{{ .Values.gitlab.storage.buckets.dependency }}";
-              mkdir -p "/export/{{ .Values.gitlab.storage.buckets.diffs }}";
-              mkdir -p "/export/{{ .Values.gitlab.storage.buckets.lfs }}";
-              mkdir -p "/export/{{ .Values.gitlab.storage.buckets.artifacts }}";
-              mkdir -p "/export/{{ .Values.gitlab.storage.buckets.uploads }}";
-              mkdir -p "/export/{{ .Values.gitlab.storage.buckets.packages }}";
-              mkdir -p "/export/{{ .Values.gitlab.storage.buckets.backup }}";
+              mkdir -p "/export/{{ .Values.storage.buckets.registry }}";
+              mkdir -p "/export/{{ .Values.storage.buckets.pages }}";
+              mkdir -p "/export/{{ .Values.storage.buckets.terraform }}";
+              mkdir -p "/export/{{ .Values.storage.buckets.dependency }}";
+              mkdir -p "/export/{{ .Values.storage.buckets.diffs }}";
+              mkdir -p "/export/{{ .Values.storage.buckets.lfs }}";
+              mkdir -p "/export/{{ .Values.storage.buckets.artifacts }}";
+              mkdir -p "/export/{{ .Values.storage.buckets.uploads }}";
+              mkdir -p "/export/{{ .Values.storage.buckets.packages }}";
+              mkdir -p "/export/{{ .Values.storage.buckets.backup }}";
               minio server "/export";
           env:
             - name: "MINIO_ROOT_USER"
@@ -67,7 +67,7 @@ spec:
               value: "storage"
             - name: "MINIO_GROUPNAME"
               value: "storage"
-          {{- with .Values.gitlab.storage.env }}
+          {{- with .Values.storage.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -93,14 +93,14 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.gitlab.storage.resources | nindent 12 }}
+            {{- toYaml .Values.storage.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/export"
       nodeSelector:
-        {{- toYaml .Values.gitlab.storage.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.storage.nodeSelector | nindent 8 }}
       volumes:
         - name: "data-volume"
           persistentVolumeClaim:

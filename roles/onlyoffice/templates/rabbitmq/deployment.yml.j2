@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ onlyoffice.rabbitmq.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if onlyoffice.rabbitmq.podAnnotations %}
+      annotations:
+        {{ onlyoffice.rabbitmq.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if onlyoffice.rabbitmq.podLabels %}
+        {{ onlyoffice.rabbitmq.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ onlyoffice.rabbitmq.name }}"
+      securityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+{% if onlyoffice.rabbitmq.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ onlyoffice.rabbitmq.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ onlyoffice.rabbitmq.image.name }}:{{ onlyoffice.rabbitmq.image.tag }}"
+          imagePullPolicy: "{{ onlyoffice.rabbitmq.image.pullPolicy }}"
+          env:
+            - name: "RABBITMQ_DEFAULT_USER"
+              value: "onlyoffice"
+            - name: "RABBITMQ_DEFAULT_PASS"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ onlyoffice.rabbitmq.name }}"
+                  key: "password"
+                  optional: false
+{% if onlyoffice.rabbitmq.env %}
+            {{ onlyoffice.rabbitmq.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          ports:
+            - name: rabbitmq
+              containerPort: 5672
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+                - "rabbitmq-diagnostics"
+                - "-q"
+                - "ping"
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - "rabbitmq-diagnostics"
+                - "-q"
+                - "ping"
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ onlyoffice.rabbitmq.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/data"
+      nodeSelector:
+        {{ onlyoffice.rabbitmq.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: "data-volume"
+          emptyDir: {}

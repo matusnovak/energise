@@ -4,4 +4,4 @@
   "Chart" .Chart
   "component" "backup"
   "name" "data"
-  "storage" .Values.postgres.backup.storage.data) }}
+  "storage" .Values.backup.storage.data) }}

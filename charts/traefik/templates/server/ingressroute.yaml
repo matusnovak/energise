@@ -1,4 +1,4 @@
-{{- if .Values.traefik.server.dashboard.enabled }}
+{{- if .Values.server.dashboard.enabled }}
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 {{ include "metadata-spec" (dict 
@@ -8,26 +8,26 @@ kind: IngressRoute
   "component" "server") }}
 spec:
   entryPoints:
-{{- if .Values.traefik.server.http.enabled }}
+{{- if .Values.server.http.enabled }}
     - web
 {{- end }}
-{{- if .Values.traefik.server.https.enabled }}
+{{- if .Values.server.https.enabled }}
     - websecure
 {{- end }}
   routes:
-    - match: Host(`{{ .Values.traefik.server.subdomain }}.{{ .Values.global.domain }}`)
+    - match: Host(`{{ .Values.server.subdomain }}.{{ .Values.global.domain }}`)
       kind: Rule
       services:
        - name: api@internal
          kind: TraefikService
-{{- if .Values.traefik.server.auth.enabled }}
+{{- if .Values.server.auth.enabled }}
       middlewares:
         - name: "{{ .Chart.Name }}-server-auth"
           namespace: "{{ .Release.Namespace }}"
 {{- end }}
-{{- if .Values.traefik.server.https.enabled }}
+{{- if .Values.server.https.enabled }}
   tls:
-{{- if eq .Values.traefik.server.certs.type "resolver" }}
+{{- if eq .Values.server.certs.type "resolver" }}
     certResolver: resolver
 {{- else }}
     { }
@@ -35,7 +35,7 @@ spec:
 {{- end }}
 {{- end }}
 
-{{- if and (.Values.traefik.server.https.enabled) (.Values.traefik.server.http.redirect) }}
+{{- if and (.Values.server.https.enabled) (.Values.server.http.redirect) }}
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute

@@ -1,0 +1,16 @@
+{% if traefik.server.certs.type == 'resolver' %}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: "{{ common.namespace }}-{{ traefik.server.name }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  capacity:
+    storage: "{{ traefik.server.storage.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  {{ lookup('template', pv_storage_spec, template_vars=dict(storage=traefik.server.storage)) | indent(2) }}
+{% endif %}

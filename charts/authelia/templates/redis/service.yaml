@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "redis"
-  "service" .Values.authelia.redis.service) }}
+  "service" .Values.redis.service) }}
   ports:
     - port: 6379
       protocol: "TCP"

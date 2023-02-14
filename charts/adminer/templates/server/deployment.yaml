@@ -16,33 +16,33 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "server"
-      "annotations" .Values.adminer.server.pod.annotations
+      "annotations" .Values.server.pod.annotations
       "checksum" $configMapHash) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-server"
       securityContext:
-        runAsUser: {{ .Values.adminer.server.uid }}
-        runAsGroup: {{ .Values.adminer.server.gid }}
-        fsGroup: {{ .Values.adminer.server.gid }}
-      {{- with .Values.adminer.server.pullSecret }}
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
-      {{- if .Values.adminer.server.auth.enabled }}
+      {{- if .Values.server.auth.enabled }}
       initContainers:
         {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
-        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.adminer.server.auth.group) | nindent 8 }}
+        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.server.auth.group) | nindent 8 }}
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-server"
-          image: "{{ .Values.adminer.server.image.name }}:{{ .Values.adminer.server.image.tag }}"
-          imagePullPolicy: "{{ .Values.adminer.server.image.pullPolicy }}"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
           env:
             - name: "ADMINER_DEFAULT_SERVER"
               value: "postgres-server.{{ .Release.Namespace }}.svc.cluster.local"
             - name: "ADMINER_DESIGN"
               value: "nette"
-          {{- with .Values.adminer.server.env }}
+          {{- with .Values.server.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -68,8 +68,8 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.adminer.server.resources | nindent 12 }}
+            {{- toYaml .Values.server.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
       nodeSelector:
-        {{- toYaml .Values.adminer.server.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}

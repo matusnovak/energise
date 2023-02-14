@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "krokimermaid"
-  "service" .Values.gitlab.krokimermaid.service) }}
+  "service" .Values.krokimermaid.service) }}
   ports:
     - port: 8002
       protocol: "TCP"

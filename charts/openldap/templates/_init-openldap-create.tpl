@@ -1,5 +1,5 @@
 {{- define "init-openldap-create" -}}
-{{ $openldap := (.Values.openldap | default .Values.global.openldap) -}}
+{{- $openldap := ((.Values.server.isOpenLDAP | default false) | ternary .Values .Values.global.openldap) -}}
 - name: "init-openldap-create"
   image: "{{ $openldap.server.image.name }}:{{ $openldap.server.image.tag }}"
   imagePullPolicy: "{{ $openldap.server.image.pullPolicy }}"

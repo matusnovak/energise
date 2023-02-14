@@ -4,13 +4,13 @@
   "Chart" .Chart
   "component" "server") }}
   routes:
-    - match: Host(`{{ .Values.homer.server.subdomain }}{{ if .Values.homer.server.subdomain }}.{{ end }}{{ .Values.global.domain }}`)
+    - match: Host(`{{ .Values.server.subdomain }}{{ if .Values.server.subdomain }}.{{ end }}{{ .Values.global.domain }}`)
       kind: Rule
       services:
        - name: "{{ .Chart.Name }}-server"
          namespace: "{{ .Release.Namespace }}"
          port: 8080
-      {{- if .Values.homer.server.auth.enabled }}
+      {{- if .Values.server.auth.enabled }}
       middlewares:
         - name: "traefik-server-auth"
           namespace: {{ .Release.Namespace }}

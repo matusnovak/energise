@@ -4,4 +4,4 @@
   "Chart" .Chart
   "component" "server"
   "name" "data"
-  "storage" .Values.keel.server.storage.data) }}
+  "storage" .Values.server.storage.data) }}

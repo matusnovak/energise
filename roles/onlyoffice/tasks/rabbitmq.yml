@@ -1,0 +1,11 @@
+- name: "Set onlyoffice rabbitmq facts"
+  set_fact:
+    onlyoffice_rabbitmq_url: "{{ onlyoffice.rabbitmq.name }}.{{ common.namespace }}.svc.cluster.local"
+
+- name: "Run deployment"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/rabbitmq/"
+    name: "{{ onlyoffice.rabbitmq.name }}"
+    deployment_timeout: 12
+    storages: []

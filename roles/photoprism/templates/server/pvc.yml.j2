@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ photoprism.server.name }}-data"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  resources:
+    requests:
+      storage: "{{ photoprism.server.storageData.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  volumeName: "{{ common.namespace }}-{{ photoprism.server.name }}-data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ photoprism.server.name }}-originals"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  resources:
+    requests:
+      storage: "{{ photoprism.server.storageOriginals.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  volumeName: "{{ common.namespace }}-{{ photoprism.server.name }}-originals"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ photoprism.server.name }}-import"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  resources:
+    requests:
+      storage: "{{ photoprism.server.storageImport.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  volumeName: "{{ common.namespace }}-{{ photoprism.server.name }}-import"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ photoprism.server.name }}-export"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  resources:
+    requests:
+      storage: "{{ photoprism.server.storageExport.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  volumeName: "{{ common.namespace }}-{{ photoprism.server.name }}-export"

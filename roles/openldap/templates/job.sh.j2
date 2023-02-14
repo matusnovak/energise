@@ -1,0 +1,30 @@
+#!/usr/bin/bash
+
+set -e
+
+count=$(ldapsearch -x -H "ldap://$LDAP_HOST:389" -D "$LDAP_USER" -w "$LDAP_PASSWORD" -b "$LDAP_BASE" "(&(objectClass=organizationalUnit)(ou=users))" | grep dn: | wc -l)
+echo "LDAP search result for users ou: $count"
+
+if [ "$count" == "0" ]
+then
+    echo "Adding users ou"
+    ldapmodify -x -H "ldap://$LDAP_HOST:389" -D "$LDAP_USER" -w "$LDAP_PASSWORD" -f /scripts/users.ldif
+fi
+
+count=$(ldapsearch -x -H "ldap://$LDAP_HOST:389" -D "$LDAP_USER" -w "$LDAP_PASSWORD" -b "$LDAP_BASE" "(&(objectClass=organizationalUnit)(ou=groups))" | grep dn: | wc -l)
+echo "LDAP search result for groups ou: $count"
+
+if [ "$count" == "0" ]
+then
+    echo "Adding groups ou"
+    ldapmodify -x -H "ldap://$LDAP_HOST:389" -D "$LDAP_USER" -w "$LDAP_PASSWORD" -f /scripts/groups.ldif
+fi
+
+count=$(ldapsearch -x -H "ldap://$LDAP_HOST:389" -D "$LDAP_USER" -w "$LDAP_PASSWORD" -b "$LDAP_BASE" "(&(objectClass=posixGroup)(cn=posix))" | grep dn: | wc -l)
+echo "LDAP search result for posix group: $count"
+
+if [ "$count" == "0" ]
+then
+    echo "Adding posix group"
+    ldapmodify -x -H "ldap://$LDAP_HOST:389" -D "$LDAP_USER" -w "$LDAP_PASSWORD" -f /scripts/posix.ldif
+fi

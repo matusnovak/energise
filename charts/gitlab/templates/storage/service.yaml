@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "storage"
-  "service" .Values.gitlab.storage.service) }}
+  "service" .Values.storage.service) }}
   ports:
     - port: 9000
       protocol: "TCP"

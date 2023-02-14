@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ onlyoffice.redis.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if onlyoffice.redis.podAnnotations %}
+      annotations:
+        {{ onlyoffice.redis.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if onlyoffice.redis.podLabels %}
+        {{ onlyoffice.redis.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ onlyoffice.redis.name }}"
+      securityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+{% if onlyoffice.redis.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ onlyoffice.redis.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ onlyoffice.redis.image.name }}:{{ onlyoffice.redis.image.tag }}"
+          imagePullPolicy: "{{ onlyoffice.redis.image.pullPolicy }}"
+{% if onlyoffice.redis.env %}
+          env:
+            {{ onlyoffice.redis.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - "redis-cli"
+                - "ping"
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ onlyoffice.redis.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/data"
+      nodeSelector:
+        {{ onlyoffice.redis.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: "data-volume"
+          emptyDir: {}

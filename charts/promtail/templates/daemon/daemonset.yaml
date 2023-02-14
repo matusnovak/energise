@@ -15,22 +15,22 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "daemon"
-      "annotations" .Values.promtail.daemon.pod.annotations
+      "annotations" .Values.daemon.pod.annotations
       "checksum" $configMapHash) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-daemon"
       securityContext:
-        runAsUser: {{ .Values.promtail.daemon.uid }}
-        runAsGroup: {{ .Values.promtail.daemon.gid }}
-        fsGroup: {{ .Values.promtail.daemon.gid }}
-      {{- with .Values.promtail.daemon.pullSecret }}
+        runAsUser: {{ .Values.daemon.uid }}
+        runAsGroup: {{ .Values.daemon.gid }}
+        fsGroup: {{ .Values.daemon.gid }}
+      {{- with .Values.daemon.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-daemon"
-          image: "{{ .Values.promtail.daemon.image.name }}:{{ .Values.promtail.daemon.image.tag }}"
-          imagePullPolicy: "{{ .Values.promtail.daemon.image.pullPolicy }}"
+          image: "{{ .Values.daemon.image.name }}:{{ .Values.daemon.image.tag }}"
+          imagePullPolicy: "{{ .Values.daemon.image.pullPolicy }}"
           args:
             - '-config.file=/etc/promtail/config.yml'
           env:
@@ -38,7 +38,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: 'spec.nodeName'
-          {{- with .Values.promtail.daemon.env }}
+          {{- with .Values.daemon.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -64,7 +64,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.promtail.daemon.resources | nindent 12 }}
+            {{- toYaml .Values.daemon.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
@@ -77,7 +77,7 @@ spec:
             - name: run
               mountPath: /run/promtail
       nodeSelector:
-        {{- toYaml .Values.promtail.daemon.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.daemon.nodeSelector | nindent 8 }}
       volumes:
         - name: "config-volume"
           configMap:

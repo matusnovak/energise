@@ -15,22 +15,22 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "krokiexcalidraw"
-      "annotations" .Values.gitlab.krokiexcalidraw.pod.annotations) | nindent 4}}
+      "annotations" .Values.krokiexcalidraw.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-krokiexcalidraw"
       securityContext:
-        runAsUser: {{ .Values.gitlab.krokiexcalidraw.uid }}
-        runAsGroup: {{ .Values.gitlab.krokiexcalidraw.gid }}
-        fsGroup: {{ .Values.gitlab.krokiexcalidraw.gid }}
-      {{- with .Values.gitlab.krokiexcalidraw.pullSecret }}
+        runAsUser: {{ .Values.krokiexcalidraw.uid }}
+        runAsGroup: {{ .Values.krokiexcalidraw.gid }}
+        fsGroup: {{ .Values.krokiexcalidraw.gid }}
+      {{- with .Values.krokiexcalidraw.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-krokiexcalidraw"
-          image: "{{ .Values.gitlab.krokiexcalidraw.image.name }}:{{ .Values.gitlab.krokiexcalidraw.image.tag }}"
-          imagePullPolicy: "{{ .Values.gitlab.krokiexcalidraw.image.pullPolicy }}"
-          {{- with .Values.gitlab.krokiexcalidraw.env }}
+          image: "{{ .Values.krokiexcalidraw.image.name }}:{{ .Values.krokiexcalidraw.image.tag }}"
+          imagePullPolicy: "{{ .Values.krokiexcalidraw.image.pullPolicy }}"
+          {{- with .Values.krokiexcalidraw.env }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -38,33 +38,15 @@ spec:
             - name: web
               containerPort: 8004
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: web
-            failureThreshold: 3
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 2
-          readinessProbe:
-            httpGet:
-              path: /
-              port: web
-            failureThreshold: 1
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.gitlab.krokiexcalidraw.resources | nindent 12 }}
+            {{- toYaml .Values.krokiexcalidraw.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/data"
       nodeSelector:
-        {{- toYaml .Values.gitlab.krokiexcalidraw.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.krokiexcalidraw.nodeSelector | nindent 8 }}
       volumes:
         - name: "data-volume"
           emptyDir: {}

@@ -1,5 +1,5 @@
 {{- define "job-storage" }}
-{{ $data := (index (index .Values .Chart.Name) .component) -}}
+{{ $data := (index .Values .component) -}}
 apiVersion: batch/v1
 kind: Job
 metadata:

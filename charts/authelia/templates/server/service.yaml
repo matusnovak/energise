@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "server"
-  "service" .Values.authelia.server.service
+  "service" .Values.server.service
   "scrape" 9959) }}
   ports:
     - port: 9091

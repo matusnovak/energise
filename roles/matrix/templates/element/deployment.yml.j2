@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ matrix.element.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: "{{ config_json | hash('md5') }}"
+{% if matrix.element.podAnnotations %}
+        {{ matrix.element.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if matrix.element.podLabels %}
+        {{ matrix.element.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ matrix.element.name }}"
+      securityContext:
+        allowPrivilegeEscalation: false
+{% if matrix.element.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ matrix.element.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ matrix.element.image.name }}:{{ matrix.element.image.tag }}"
+          imagePullPolicy: "{{ matrix.element.image.pullPolicy }}"
+{% if matrix.element.env %}
+          env:
+            {{ matrix.element.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          ports:
+            - name: web
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ matrix.element.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: /app/config.json
+              subPath: config.json
+              readOnly: true
+      nodeSelector:
+        {{ matrix.element.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ matrix.element.name }}"
+            optional: false
+            items:
+              - key: "config.json"
+                path: "config.json"

@@ -15,14 +15,14 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "backup"
-      "annotations" .Values.postgres.backup.pod.annotations) | nindent 4}}
+      "annotations" .Values.backup.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-backup"
       securityContext:
-        runAsUser: {{ .Values.postgres.backup.uid }}
-        runAsGroup: {{ .Values.postgres.backup.gid }}
-        fsGroup: {{ .Values.postgres.backup.gid }}
-      {{- with .Values.postgres.backup.pullSecret }}
+        runAsUser: {{ .Values.backup.uid }}
+        runAsGroup: {{ .Values.backup.gid }}
+        fsGroup: {{ .Values.backup.gid }}
+      {{- with .Values.backup.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
@@ -30,8 +30,8 @@ spec:
         {{- include "init-postgres-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
       containers:
         - name: "{{ .Chart.Name }}-backup"
-          image: "{{ .Values.postgres.backup.image.name }}:{{ .Values.postgres.backup.image.tag }}"
-          imagePullPolicy: "{{ .Values.postgres.backup.image.pullPolicy }}"
+          image: "{{ .Values.backup.image.name }}:{{ .Values.backup.image.tag }}"
+          imagePullPolicy: "{{ .Values.backup.image.pullPolicy }}"
           env:
             - name: POSTGRES_HOST
               value: "{{ .Chart.Name }}-server.{{ .Release.Namespace }}.svc.cluster.local"
@@ -42,24 +42,24 @@ spec:
                   key: password
                   optional: false
             - name: POSTGRES_USER
-              value: "{{ .Values.postgres.server.user }}"
+              value: "{{ .Values.server.user }}"
             - name: POSTGRES_CLUSTER
               value: "TRUE"
             - name: POSTGRES_DB
-              value: "{{ .Values.postgres.server.database }}"
+              value: "{{ .Values.server.database }}"
             - name: POSTGRES_EXTRA_OPTS
-              value: "{{ .Values.postgres.backup.extra }}"
+              value: "{{ .Values.backup.extra }}"
             - name: SCHEDULE
-              value: "{{ .Values.postgres.backup.schedule }}"
+              value: "{{ .Values.backup.schedule }}"
             - name: BACKUP_KEEP_DAYS
-              value: "{{ .Values.postgres.backup.keepDays }}"
+              value: "{{ .Values.backup.keepDays }}"
             - name: BACKUP_KEEP_WEEKS
-              value: "{{ .Values.postgres.backup.keepWeeks }}"
+              value: "{{ .Values.backup.keepWeeks }}"
             - name: BACKUP_KEEP_MONTHS
-              value: "{{ .Values.postgres.backup.keepMonths }}"
+              value: "{{ .Values.backup.keepMonths }}"
             - name: HEALTHCHECK_PORT
               value: "8080"
-          {{- with .Values.postgres.backup.env }}
+          {{- with .Values.backup.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -85,14 +85,14 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.postgres.backup.resources | nindent 12 }}
+            {{- toYaml .Values.backup.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/backup"
       nodeSelector:
-        {{- toYaml .Values.postgres.backup.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.backup.nodeSelector | nindent 8 }}
       volumes:
         - name: data-volume
           persistentVolumeClaim:

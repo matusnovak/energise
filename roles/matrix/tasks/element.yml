@@ -1,0 +1,12 @@
+- name: "Set matrix element facts"
+  set_fact:
+    matrix_element_url: "{{ matrix.element.name }}.{{ common.namespace }}.svc.cluster.local"
+    config_json: "{{ lookup('template', role_path + '/templates/config.json.j2') }}"
+
+- name: "Run deployment"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/element/"
+    name: "{{ matrix.element.name }}"
+    deployment_timeout: 6
+    storages: []

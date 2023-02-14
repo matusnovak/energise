@@ -1,0 +1,47 @@
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "git"
+  "storage" .Values.server.storage.git) }}
+---
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "logs"
+  "storage" .Values.server.storage.logs) }}
+---
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "config"
+  "storage" .Values.server.storage.config) }}
+---
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "shared"
+  "storage" .Values.server.storage.shared) }}
+---
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "builds"
+  "storage" .Values.server.storage.builds) }}
+---
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "ssh"
+  "storage" .Values.server.storage.ssh) }}

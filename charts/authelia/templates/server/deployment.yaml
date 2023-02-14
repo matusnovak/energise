@@ -16,28 +16,28 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "server"
-      "annotations" .Values.authelia.server.pod.annotations
+      "annotations" .Values.server.pod.annotations
       "checksum" $configMapHash) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-server"
       enableServiceLinks: false
       securityContext:
-        runAsUser: {{ .Values.authelia.server.uid }}
-        runAsGroup: {{ .Values.authelia.server.gid }}
-        fsGroup: {{ .Values.authelia.server.gid }}
-      {{- with .Values.authelia.server.pullSecret }}
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       initContainers:
         {{- include "init-postgres-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
-        {{- include "init-postgres-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "database" .Values.authelia.server.database) | nindent 8 }}
+        {{- include "init-postgres-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "database" .Values.server.database) | nindent 8 }}
         {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
       containers:
         - name: "{{ .Chart.Name }}-server"
-          image: "{{ .Values.authelia.server.image.name }}:{{ .Values.authelia.server.image.tag }}"
-          imagePullPolicy: "{{ .Values.authelia.server.image.pullPolicy }}"
-          {{- with .Values.authelia.server.env }}
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
+          {{- with .Values.server.env }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -67,7 +67,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.authelia.server.resources | nindent 12 }}
+            {{- toYaml .Values.server.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
@@ -77,7 +77,7 @@ spec:
             - name: "notification-volume"
               mountPath: "/notification"
       nodeSelector:
-        {{- toYaml .Values.authelia.server.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
       volumes:
         - name: "config-volume"
           configMap:

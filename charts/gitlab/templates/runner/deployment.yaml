@@ -1,0 +1,98 @@
+{{- if .Values.runner.token }}
+{{ $configMapHash := include (print $.Template.BasePath "/runner/configmap.yaml") . | sha256sum }}
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "runner") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "runner") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "runner"
+      "annotations" .Values.runner.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-runner"
+      securityContext:
+        runAsUser: {{ .Values.runner.uid }}
+        runAsGroup: {{ .Values.runner.gid }}
+        fsGroup: {{ .Values.runner.gid }}
+      {{- with .Values.runner.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "{{ .Chart.Name }}-runner"
+          image: "{{ .Values.runner.image.name }}:{{ .Values.runner.image.tag }}"
+          imagePullPolicy: "{{ .Values.runner.image.pullPolicy }}"
+          command:
+            - '/bin/bash'
+          args:
+            - '/scripts/entrypoint.sh'
+          env:
+            - name: "KUBERNETES_NAMESPACE"
+              value: "{{ .Release.Namespace }}"
+          {{- with .Values.runner.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: metrics
+              containerPort: 9252
+              protocol: TCP
+            - name: session
+              containerPort: 8093
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: metrics
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            tcpSocket:
+              port: metrics
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.runner.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: "/scripts/entrypoint.sh"
+              subPath: "entrypoint.sh"
+              readOnly: true
+            - name: "config-volume"
+              mountPath: "/scripts/config.toml"
+              subPath: "config.toml"
+              readOnly: true
+            - name: "data-volume"
+              mountPath: "/etc/gitlab-runner"
+      nodeSelector:
+        {{- toYaml .Values.runner.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ .Chart.Name }}-runner"
+            optional: false
+            items:
+              - key: "entrypoint.sh"
+                path: "entrypoint.sh"
+              - key: "config.toml"
+                path: "config.toml"
+        - name: "data-volume"
+          emptyDir: {}
+{{- end }}

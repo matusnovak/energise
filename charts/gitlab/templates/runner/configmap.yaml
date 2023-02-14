@@ -1,0 +1,51 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "runner") }}
+data:
+  config.toml: |
+    concurrent = {{ .Values.runner.concurrent }}
+    check_interval = 10
+    listen_address = "0.0.0.0:9252"
+
+    [session_server]
+    listen_address = "0.0.0.0:8093"
+    advertise_address = "{{ .Values.runner.subdomain }}.{{ .Values.global.domain }}"
+    session_timeout = 1800
+
+  entrypoint.sh: |
+    #!/bin/bash
+
+    set -xe
+
+    cp /scripts/config.toml /etc/gitlab-runner/
+
+    # Register the runner
+    /entrypoint register \
+        --non-interactive \
+    {{- if .Values.runner.runUntagged }}
+        --run-untagged \
+    {{- end }}
+        --registration-token "{{ .Values.runner.token }}" \
+        --url "https://{{ .Values.server.subdomain }}.{{ .Values.global.domain }}" \
+        --clone-url "https://{{ .Values.server.subdomain }}.{{ .Values.global.domain }}" \
+        --executor "kubernetes" \
+        --name "Kubernetes Runner" \
+        --kubernetes-image "{{ .Values.runner.defaultImage }}" \
+        --tag-list "{{ .Values.runner.tags }}" \
+        --kubernetes-node-selector {{ .Values.runner.jobNodeSelector }} \
+        --config "/etc/gitlab-runner/config.toml" \
+        --cache-type "s3" \
+        --cache-path "cache" \
+        --cache-shared \
+        --cache-s3-server-address "{{ .Chart.Name }}-cache.{{ .Release.Namespace }}.svc.cluster.local:9000" \
+        --cache-s3-access-key "{{ .Values.cache.accessKey }}" \
+        --cache-s3-secret-key "{{ .Values.cache.secretKey }}" \
+        --cache-s3-bucket-name "{{ .Values.cache.bucket.name }}" \
+        --cache-s3-insecure
+
+    # Start the runner
+    /entrypoint run --user=gitlab-runner \
+        --working-directory=/home/gitlab-runner \
+        --config "/etc/gitlab-runner/config.toml"

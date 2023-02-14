@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: "{{ common.namespace }}-{{ gitlab.cache.name }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  capacity:
+    storage: "{{ gitlab.cache.storage.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  {{ lookup('template', pv_storage_spec, template_vars=dict(storage=gitlab.cache.storage)) | indent(2) }}

@@ -4,4 +4,4 @@
   "Chart" .Chart
   "component" "cassandra"
   "name" "data"
-  "storage" .Values.loki.cassandra.storage.data) }}
+  "storage" .Values.cassandra.storage.data) }}

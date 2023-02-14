@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ postgres.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if postgres.server.podAnnotations %}
+      annotations:
+        {{ postgres.server.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if postgres.server.podLabels %}
+        {{ postgres.server.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ postgres.server.name }}"
+      securityContext:
+        runAsUser: 999
+        fsGroup: 999
+{% if postgres.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ postgres.server.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ postgres.server.image.name }}:{{ postgres.server.image.tag }}"
+          imagePullPolicy: "{{ postgres.server.image.pullPolicy }}"
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ postgres.server.name }}"
+                  key: password
+                  optional: false
+            - name: POSTGRES_USER
+              value: "{{ postgres.server.user }}"
+            - name: POSTGRES_DB
+              value: "{{ postgres.server.database }}"
+{% if postgres.server.env %}
+            {{ postgres.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          args:
+            - '-c'
+            - 'max_connections=256'
+            - '-c'
+            - 'shared_buffers=4096MB'
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - 'sh'
+                - '-c'
+                - 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 1
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - 'sh'
+                - '-c'
+                - 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            {{ postgres.server.resources | to_nice_yaml | indent(12) }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data-volume
+              mountPath: /var/lib/postgresql/data
+      nodeSelector:
+        {{ postgres.server.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ postgres.server.name }}"

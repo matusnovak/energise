@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "server"
-  "service" .Values.loki.server.service) }}
+  "service" .Values.server.service) }}
   ports:
     - port: 3100
       protocol: "TCP"

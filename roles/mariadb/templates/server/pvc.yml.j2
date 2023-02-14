@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ mariadb.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  resources:
+    requests:
+      storage: "{{ mariadb.server.storage.capacity }}"
+  accessModes:
+    - ReadWriteMany
+  volumeName: "{{ common.namespace }}-{{ mariadb.server.name }}"

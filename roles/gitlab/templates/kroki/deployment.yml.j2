@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ gitlab.kroki.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if gitlab.kroki.podAnnotations %}
+      annotations:
+        {{ gitlab.kroki.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if gitlab.kroki.podLabels %}
+        {{ gitlab.kroki.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ gitlab.kroki.name }}"
+      securityContext:
+        allowPrivilegeEscalation: false
+{% if gitlab.kroki.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ gitlab.kroki.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ gitlab.kroki.image.name }}:{{ gitlab.kroki.image.tag }}"
+          imagePullPolicy: "{{ gitlab.kroki.image.pullPolicy }}"
+          env:
+            - name: "KROKI_BLOCKDIAG_HOST"
+              value: "{{ gitlab_kroki_blockdiag_url }}"
+            - name: "KROKI_MERMAID_HOST"
+              value: "{{ gitlab_kroki_mermaid_url }}"
+            - name: "KROKI_BPMN_HOST"
+              value: "{{ gitlab_kroki_bpmn_url }}"
+            - name: "KROKI_EXCALIDRAW_HOST"
+              value: "{{ gitlab_kroki_excalidraw_url }}"
+{% if gitlab.kroki.env %}
+            {{ gitlab.kroki.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          ports:
+            - name: web
+              containerPort: 8000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ gitlab.kroki.resources | to_nice_yaml | indent(12) }}
+          securityContext:
+            allowPrivilegeEscalation: false
+      nodeSelector:
+        {{ gitlab.kroki.nodeSelector | to_nice_yaml | indent(8) }}

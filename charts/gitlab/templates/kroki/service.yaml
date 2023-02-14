@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "kroki"
-  "service" .Values.gitlab.kroki.service) }}
+  "service" .Values.kroki.service) }}
   ports:
     - port: 8000
       protocol: "TCP"

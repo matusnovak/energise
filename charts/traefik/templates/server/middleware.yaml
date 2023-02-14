@@ -13,7 +13,7 @@ spec:
     authResponseHeaders:
       - "Remote-User"
       - "Remote-Groups"
-{{- if .Values.traefik.server.http.redirect }}
+{{- if .Values.server.http.redirect }}
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware

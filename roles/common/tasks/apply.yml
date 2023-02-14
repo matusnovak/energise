@@ -1,0 +1,148 @@
+- name: "Set templates variables"
+  set_fact:
+    yaml: ''
+    service:
+      name: "{{ name }}"
+      selector:
+        "app.kubernetes.io/name": "{{ name }}"
+        "app.kubernetes.io/instance": "{{ common.namespace }}-{{ name }}"
+      extraLabels:
+        "app.kubernetes.io/managed-by": "energise"
+        "app.kubernetes.io/part-of": "{{ common.namespace }}"
+        "app.kubernetes.io/component": "{{ name }}"
+
+- name: "Parse templates"
+  set_fact:
+    yaml: "{{ yaml | default('') + '---\n' + (lookup('template', item.src)) }}"
+  loop: "{{ lookup('ansible.builtin.filetree', resources, wantlist=True) }}"
+  when: item.state == 'file'
+
+- name: "{{ name }} - Calculate templates hash"
+  set_fact:
+    yaml_hash: "{{ yaml | hash('md5') }}"
+  when: update_with_hash | default(true)
+
+- name: "{{ name }} - Update templates with hash"
+  yaml_modify:
+    yaml: "{{ yaml }}"
+    actions:
+      - key: "metadata.labels"
+        op: "update"
+        value:
+          "energise.io/template-hash": "{{ yaml_hash }}"
+  register: yaml_modified
+  when: update_with_hash | default(true)
+
+- name: "{{ name }} - Update variables"
+  set_fact:
+    yaml: "{{ yaml_modified.yaml }}"
+  when: update_with_hash | default(true)
+
+- name: "{{ name }} - Find current deployment"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Deployment
+    name: "{{ name }}"
+    namespace: "{{ common.namespace }}"
+  register: deployment
+
+- name: "{{ name }} - Check deployment for diff"
+  set_fact:
+    diff_changed: "{{ (deployment.resources[0].metadata.labels['energise.io/template-hash'] | default('')) != yaml_hash }}"
+
+#- name: "{{ name }} - Create host storage directory"
+#  file:
+#    path: "{{ common.storage.path }}/{{ storage.dir }}"
+#    state: directory
+#    mode: "{{ storage.mode | default(omit) }}"
+#    owner: "{{ storage.uid }}"
+#    group: "{{ storage.gid }}"
+#  become: yes
+#  when: diff_changed and common.storage.type == "host" and item_storage.when | default(true)
+#  loop: "{{ storages }}"
+#  loop_control:
+#    loop_var: storage
+
+- name: "Configure storage"
+  block:
+
+  - name: "{{ name }} - Delete old storage job definition"
+    kubernetes.core.k8s:
+      state: absent
+      api_version: v1
+      apply: true
+      definition: "{{ lookup('template', job_configure_storage) }}"
+
+  - name: "{{ name }} - Find storage job pods"
+    kubernetes.core.k8s_info:
+      api_version: v1
+      kind: Pod
+      namespace: "{{ common.namespace }}"
+      label_selectors:
+        - "job-name=storage-job"
+    register: pods
+
+  - name: "Remove stale storage job pods"
+    kubernetes.core.k8s:
+      api_version: v1
+      kind: Pod
+      name: "{{ pod.metadata.name }}"
+      namespace: "{{ common.namespace }}"
+      state: absent
+    loop: "{{ pods.resources }}"
+    loop_control:
+      loop_var: pod
+    when: (pods.resources | length) > 0
+
+  - name: "{{ name }} - Create storage job"
+    kubernetes.core.k8s:
+      state: present
+      apply: true
+      definition: "{{ lookup('template', job_configure_storage) }}"
+
+  - name: "{{ name }} - Check storage job for status"
+    kubernetes.core.k8s_info:
+      api_version: batch/v1
+      kind: Job
+      name: "storage-job"
+      namespace: "{{ common.namespace }}"
+    register: jobs
+    until: jobs.resources[0].status.active is not defined or jobs.resources[0].status.active != 1
+    retries: 12
+    delay: 5
+    ignore_errors: yes
+
+  - name: "{{ name }} - Check storage job for failure"
+    fail:
+      msg: "Storage job has failed"
+    when: jobs.resources[0].status.failed is defined and jobs.resources[0].status.failed != 0
+
+  when: diff_changed and ((storages | default([])) | length) != 0
+
+- name: "Deploy"
+  block:
+
+  - name: "{{ name }} - Deploy resources"
+    kubernetes.core.k8s:
+      state: present
+      apply: true
+      definition: "{{ yaml }}"
+
+  - name: "{{ name }} - Wait for deployment"
+    debug:
+      msg: ""
+    when: (deployment_timeout | default(0)) > 0
+
+  - name: "{{ name }} - Check deployment for ready replicas"
+    kubernetes.core.k8s_info:
+      api_version: v1
+      kind: Deployment
+      name: "{{ name }}"
+      namespace: "{{ common.namespace }}"
+    register: deployment
+    until: (deployment.resources[0].status.readyReplicas | default(0)) >= 1
+    retries: 60
+    delay: 10
+    when: (deployment_timeout | default(0)) > 0
+
+  when: diff_changed

@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "server"
-  "service" .Values.keel.server.service) }}
+  "service" .Values.server.service) }}
   ports:
     - port: 9300
       protocol: "TCP"

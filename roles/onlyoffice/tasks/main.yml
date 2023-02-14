@@ -1,0 +1,11 @@
+- name: "Deploy redis"
+  include_tasks: "redis.yml"
+  when: onlyoffice.enabled
+
+- name: "Deploy rabbitmq"
+  include_tasks: "rabbitmq.yml"
+  when: onlyoffice.enabled
+
+- name: "Deploy server"
+  include_tasks: "server.yml"
+  when: onlyoffice.enabled

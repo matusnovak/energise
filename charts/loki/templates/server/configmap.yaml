@@ -54,12 +54,12 @@ data:
     storage_config:
       cassandra:
         username: cassandra
-        password: {{ .Values.loki.cassandra.password }}
+        password: {{ .Values.cassandra.password }}
         consistency: LOCAL_ONE
         addresses: {{ .Chart.Name }}-cassandra.{{ .Release.Namespace }}.svc.cluster.local
         auth: true
         keyspace: lokiindex
 
        aws:
-        s3: s3://{{ .Values.loki.minio.accessKey }}:{{ .Values.loki.minio.secretKey }}@{{ .Chart.Name }}-loki.{{ .Release.Namespace }}.svc.cluster.local/objects
+        s3: s3://{{ .Values.minio.accessKey }}:{{ .Values.minio.secretKey }}@{{ .Chart.Name }}-loki.{{ .Release.Namespace }}.svc.cluster.local/objects
         s3forcepathstyle: true

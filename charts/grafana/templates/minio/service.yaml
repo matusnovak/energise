@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "minio"
-  "service" .Values.grafana.minio.service) }}
+  "service" .Values.minio.service) }}
   ports:
     - port: 9000
       protocol: "TCP"

@@ -1,0 +1,14 @@
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "runner"
+  "service" .Values.runner.service
+  "scrape" 9252) }}
+  ports:
+    - port: 9252
+      protocol: "TCP"
+      name: "metrics"
+    - port: 8093
+      protocol: "TCP"
+      name: "session"

@@ -1,0 +1,112 @@
+---
+title: "{{ common.domain }}"
+subtitle: "Dashboard"
+icon: "fas fa-server"
+
+header: true
+footer: false
+
+columns: "3"
+connectivityCheck: false
+
+defaults:
+  layout: list
+  colorTheme: auto
+
+theme: default
+
+services:
+  - name: "Applications"
+    icon: "fas fa-code-branch"
+    items:
+{% if send.enabled %}
+      - name: "Send"
+        icon: "fas fa-cloud-arrow-up"
+        subtitle: "Encrypt and send files with a link"
+        tag: "app"
+        url: "https://{{ send.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if filebrowser.enabled %}
+      - name: "File Browser"
+        icon: "fas fa-folder-open"
+        subtitle: "Access your files through a nice web interface"
+        tag: "app"
+        url: "https://{{ filebrowser.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if photoprism.enabled %}
+      - name: "PhotoPrism"
+        icon: "fas fa-photo-film"
+        subtitle: "AI-Powered Photos App for the Decentralized Web"
+        tag: "app"
+        url: "https://{{ photoprism.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if matrix.enabled %}
+      - name: "Matrix"
+        icon: "fas fa-comment"
+        subtitle: "Real-time communication"
+        tag: "app"
+        url: "https://{{ matrix.element.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if vigil.enabled %}
+      - name: "Status"
+        icon: "fas fa-square-check"
+        subtitle: "Status page"
+        tag: "app"
+        url: "https://{{ vigil.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if gitlab.enabled %}
+      - name: "GitLab"
+        icon: "fa-brands fa-gitlab"
+        subtitle: "Code repository and collaborative software"
+        tag: "app"
+        url: "https://{{ gitlab.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if onlyoffice.enabled %}
+      - name: "ONLYOFFICE"
+        icon: "fa-regular fa-file-lines"
+        subtitle: "Feature-rich web-based office suite"
+        tag: "app"
+        url: "https://{{ onlyoffice.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if qbittorrent.enabled %}
+      - name: "qBittorrent"
+        icon: "fa-solid fa-cloud-arrow-down"
+        subtitle: "Cross-platform free and open-source BitTorrent client"
+        tag: "app"
+        url: "https://{{ qbittorrent.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if haste.enabled %}
+      - name: "Hastebin"
+        icon: "fa-solid fa-file-pen"
+        subtitle: "Haste is an open-source pastebin software"
+        tag: "app"
+        url: "https://{{ haste.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if hedgedoc.enabled %}
+      - name: "HedgeDoc"
+        icon: "fa-brands fa-markdown"
+        subtitle: "The best platform to write and share markdown"
+        tag: "app"
+        url: "https://{{ hedgedoc.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if drawio.enabled %}
+      - name: "Draw.io"
+        icon: "fa-solid fa-pen-nib"
+        subtitle: "Diagramming/whiteboarding visualization application"
+        tag: "app"
+        url: "https://{{ drawio.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if joplin.enabled %}
+      - name: "Joplin Server"
+        icon: "fa-solid fa-book"
+        subtitle: "Sync server for Joplin a note taking application"
+        tag: "app"
+        url: "https://{{ joplin.server.subdomain }}.{{ common.domain }}/"
+{% endif %}
+{% if syncthing.enabled %}
+      - name: "Syncthing"
+        icon: "fa-solid fa-rotate"
+        subtitle: "Syncthing is a continuous file synchronization program"
+        tag: "app"
+        url: "https://{{ syncthing.server.subdomain }}.{{ common.domain }}/"
+{% endif %}

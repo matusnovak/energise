@@ -1,0 +1,17 @@
+{{ include "ingressroute-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+  routes:
+    - match: Host(`{{ .Values.server.subdomain }}.{{ .Values.global.domain }}`)
+      kind: Rule
+      services:
+       - name: "{{ .Chart.Name }}-server"
+         namespace: "{{ .Release.Namespace }}"
+         port: 7777
+      {{- if .Values.server.auth.enabled }}
+      middlewares:
+        - name: "traefik-server-auth"
+          namespace: {{ .Release.Namespace }}
+      {{- end }}

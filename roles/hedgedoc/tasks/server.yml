@@ -1,0 +1,18 @@
+- name: "Set hedgedoc server facts"
+  set_fact:
+    hedgedoc_server_url: "{{ hedgedoc.server.name }}.{{ common.namespace }}.svc.cluster.local"
+
+- name: "Run deployment"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/server/"
+    name: "{{ hedgedoc.server.name }}"
+    deployment_timeout: 12
+    storages:
+      - dir: "{{ hedgedoc.server.storage.dir }}"
+        setup: "{{ hedgedoc.server.storage.setup | default(omit) }}"
+        host: "{{ hedgedoc.server.storage.host | default(omit) }}"
+        nfs: "{{ hedgedoc.server.storage.nfs | default(omit) }}"
+        mode: "0700"
+        uid: "{{ hedgedoc.server.uid }}"
+        gid: "{{ hedgedoc.server.gid }}"

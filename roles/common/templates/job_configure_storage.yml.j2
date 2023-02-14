@@ -1,0 +1,84 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "storage-job"
+  namespace: "{{ common.namespace }}"
+  labels:
+    "app.kubernetes.io/managed-by": "energise"
+    "app.kubernetes.io/part-of": "{{ common.namespace }}"
+    "app.kubernetes.io/component": "storage-job"
+spec:
+  ttlSecondsAfterFinished: 60
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  backoffLimit: 1
+  template:
+    spec:
+      securityContext:
+        runAsUser: 0
+{% if common.busybox.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ common.busybox.pullSecret }}"
+{% endif %}
+      containers:
+        - name: job
+          image: "{{ common.busybox.image.name }}:{{ common.busybox.image.tag }}"
+          imagePullPolicy: "{{ common.busybox.image.pullPolicy }}"
+          command:
+            - '/bin/sh'
+            - '-c'
+            - |
+              echo "Configuring storage"
+{% for storage in storages %}
+{% if storage.setup | default(true) %}
+              echo "Creating and configuring directory /mnt/storage/{{ storage.dir }}";
+              mkdir -p "/mnt/storage/{{ storage.dir }}";
+              chown {{ storage.uid }}:{{ storage.gid }} "/mnt/storage/{{ storage.dir }}";
+{% if storage.mode is defined %}
+              chmod {{ storage.mode }} "/mnt/storage/{{ storage.dir }}";
+{% endif %}
+{% endif %}
+{% endfor %}
+          volumeMounts:
+            - name: storage-volume
+              mountPath: /mnt/storage
+      restartPolicy: Never
+      volumes:
+        - name: storage-volume
+          persistentVolumeClaim:
+            claimName: "storage-job"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: "{{ common.namespace }}-storage-job"
+  labels:
+    "app.kubernetes.io/managed-by": "energise"
+    "app.kubernetes.io/part-of": "{{ common.namespace }}"
+    "app.kubernetes.io/component": "storage-job"
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  capacity:
+    storage: "1Gi"
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  {{ lookup('template', pv_storage_spec, template_vars=dict(storage=common.storage)) | indent(2) }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "storage-job"
+  namespace: "{{ common.namespace }}"
+  labels:
+    "app.kubernetes.io/managed-by": "energise"
+    "app.kubernetes.io/part-of": "{{ common.namespace }}"
+    "app.kubernetes.io/component": "storage-job"
+spec:
+  storageClassName: "{{ common.storage.class }}"
+  resources:
+    requests:
+      storage: "1Gi"
+  accessModes:
+    - ReadWriteMany
+  volumeName: "{{ common.namespace }}-storage-job"

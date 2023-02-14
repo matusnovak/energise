@@ -1,0 +1,20 @@
+worker_app: "{{ config.app }}"
+worker_name: "{{ config.app | replace('.', '_') }}"
+
+worker_main_http_uri: "http://{{ matrix_synapse_homeserver_url }}:8008"
+worker_replication_host: "{{ matrix_synapse_homeserver_url }}"
+worker_replication_http_port: 9093
+
+worker_listeners:
+  - port: 8008
+    tls: false
+    bind_addresses: ['0.0.0.0']
+    type: http
+    x_forwarded: true
+
+    resources:
+      - names:
+          {{ config.listeners | to_nice_yaml | indent(10) }}
+        compress: false
+
+worker_log_config: "/config/homeserver.log.config"

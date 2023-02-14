@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ mariadb.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if mariadb.server.serviceLabels -%}
+    {{ mariadb.server.serviceLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if mariadb.server.serviceAnnotations -%}
+  annotations:
+    {{ mariadb.server.serviceAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ mariadb.server.serviceType }}"
+  ports:
+    - port: 3306
+      protocol: TCP
+      name: mariadb
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}

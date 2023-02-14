@@ -1,328 +1,327 @@
-loki:
-  server:
-    # Docker image for the Grafana server.
-    image:
-      # Image name without the tag.
-      # type: string
-      name: "docker.io/grafana/loki"
-
-      # Image tag.
-      # type: string
-      tag: "latest"
-
-      # Image pull policy.
-      # type: string
-      pullPolicy: "IfNotPresent"
-
-    # Automatic update policy with Keel
-    keel:
-      enabled: true
-      policy: "force"
-      matchTag: false
-
-    # The user ID to run with.
-    # type: integer
-    uid: "10001"
-
-    # The group ID to run with.
-    # type: integer
-    gid: "10001"
-
-    # Storage options.
-    storage:
-      data:
-        # Capacity to request.
-        # type: string
-        capacity: "1Gi"
-
-        # Storage subdirectory
-        # type: string
-        dir: "loki/server"
-
-        mode: "700"
-
-    # Additional environment variables for the pod.
-    # type: map
-    # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
-    env: []
-
-    # Service related variables
-    service:
-      # The kubernetes service type.
-      # type: string
-      type: "ClusterIP"
-
-      # Additional annotations to add to the service.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      annotations: {}
-
-      # Additional labels to add to the service.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      labels: {}
-    
-    # Pod related variables
-    pod:
-      # Additional annotations to add to the pod.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      annotations: {}
-
-      # Additional labels to add to the pod.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      labels: {}
-
-    # Specify which node or nodes can be used to host this pod.
-    # Leave as an empty map to allow the pod to be spawned anywhere.
-    # type: map
-    # example: { "kubernetes.io/arch": "amd64" }
-    nodeSelector: {}
-
-    # Optionally specify how much of each resource the pod will need.
-    resources:
-      # Maximum limits that the pod can not exceed.
-      # Set to ~ or null to disable the resource limits.
-      limits:
-        # Maximum CPU that the pod can not exceed.
-        # type: string
-        # example: "1000m"
-        cpu: ~
-        # Maximum RAM that the pod can not exceed.
-        # type: string
-        # example: "1024Mi"
-        memory: ~
-      # Requested limits for scheduling the pod on nodes.
-      # Set to ~ or null to disable the resource requests.
-      requests:
-        # The requested amount of CPU
-        # type: string
-        # example: "500m"
-        cpu: ~
-        # The requested amount of CPU
-        # type: string
-        # example: "512Mi"
-        memory: ~
-
-  minio:
-    # Docker image for the MinIO S3 storage.
-    image:
-      # Image name without the tag.
-      # type: string
-      name: "docker.io/minio/minio"
-
-      # Image tag.
-      # type: string
-      tag: "latest"
-
-      # Image pull policy.
-      # type: string
-      pullPolicy: "IfNotPresent"
-
-    # Automatic update policy with Keel
-    keel:
-      enabled: true
-      policy: "force"
-      matchTag: false
-
-    # The user ID to run with.
-    # type: integer
-    uid: "1000"
-
-    # The group ID to run with.
-    # type: integer
-    gid: "1000"
-
-    # Access key, any random string
+server:
+  # Docker image for the Grafana server.
+  image:
+    # Image name without the tag.
     # type: string
-    accessKey: "someAccessKey"
+    name: "docker.io/grafana/loki"
 
-    # Secret key, any random string
+    # Image tag.
     # type: string
-    secretKey: "Password1!"
+    tag: "latest"
 
-    # Storage options.
-    storage:
-      data:
-        # Capacity to request.
-        # type: string
-        capacity: "10Gi"
+    # Image pull policy.
+    # type: string
+    pullPolicy: "IfNotPresent"
 
-        # Storage subdirectory
-        # type: string
-        dir: "loki/minio"
+  # Automatic update policy with Keel
+  keel:
+    enabled: true
+    policy: "force"
+    matchTag: false
 
-        mode: "700"
+  # The user ID to run with.
+  # type: integer
+  uid: "10001"
 
-    # Additional environment variables for the pod.
-    # type: map
-    # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
-    env: []
+  # The group ID to run with.
+  # type: integer
+  gid: "10001"
 
-    # Service related variables
-    service:
-      # The kubernetes service type.
+  # Storage options.
+  storage:
+    data:
+      # Capacity to request.
       # type: string
-      type: "ClusterIP"
+      capacity: "1Gi"
 
-      # Additional annotations to add to the service.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      annotations: {}
+      # Storage subdirectory
+      # type: string
+      dir: "loki/server"
 
-      # Additional labels to add to the service.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      labels: {}
-    
-    # Pod related variables
-    pod:
-      # Additional annotations to add to the pod.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      annotations: {}
+      mode: "700"
 
-      # Additional labels to add to the pod.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      labels: {}
+  # Additional environment variables for the pod.
+  # type: map
+  # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
+  env: []
 
-    # Specify which node or nodes can be used to host this pod.
-    # Leave as an empty map to allow the pod to be spawned anywhere.
+  # Service related variables
+  service:
+    # The kubernetes service type.
+    # type: string
+    type: "ClusterIP"
+
+    # Additional annotations to add to the service.
     # type: map
-    # example: { "kubernetes.io/arch": "amd64" }
-    nodeSelector: {}
+    # example: { "example.com/hello": "world" }
+    annotations: {}
 
-    # Optionally specify how much of each resource the pod will need.
-    resources:
-      # Maximum limits that the pod can not exceed.
-      # Set to ~ or null to disable the resource limits.
-      limits:
-        # Maximum CPU that the pod can not exceed.
-        # type: string
-        # example: "1000m"
-        cpu: ~
-        # Maximum RAM that the pod can not exceed.
-        # type: string
-        # example: "1024Mi"
-        memory: ~
-      # Requested limits for scheduling the pod on nodes.
-      # Set to ~ or null to disable the resource requests.
-      requests:
-        # The requested amount of CPU
-        # type: string
-        # example: "500m"
-        cpu: ~
-        # The requested amount of CPU
-        # type: string
-        # example: "512Mi"
-        memory: ~
+    # Additional labels to add to the service.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    labels: {}
   
-  cassandra:
-    # Docker image for the cassandra storage.
-    image:
-      # Image name without the tag.
-      # type: string
-      name: "docker.io/library/cassandra"
-
-      # Image tag.
-      # type: string
-      tag: "4"
-
-      # Image pull policy.
-      # type: string
-      pullPolicy: "IfNotPresent"
-
-    # Automatic update policy with Keel
-    keel:
-      enabled: true
-      policy: "force"
-      matchTag: false
-
-    # The user ID to run with.
-    # type: integer
-    uid: "1000"
-
-    # The group ID to run with.
-    # type: integer
-    gid: "1000"
-
-    password: 'Password1!'
-
-    # Storage options.
-    storage:
-      data:
-        # Capacity to request.
-        # type: string
-        capacity: "10Gi"
-
-        # Storage subdirectory
-        # type: string
-        dir: "loki/cassandra"
-
-        mode: "700"
-
-    # Additional environment variables for the pod.
+  # Pod related variables
+  pod:
+    # Additional annotations to add to the pod.
     # type: map
-    # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
-    env: []
+    # example: { "example.com/hello": "world" }
+    annotations: {}
 
-    # Service related variables
-    service:
-      # The kubernetes service type.
-      # type: string
-      type: "ClusterIP"
-
-      # Additional annotations to add to the service.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      annotations: {}
-
-      # Additional labels to add to the service.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      labels: {}
-    
-    # Pod related variables
-    pod:
-      # Additional annotations to add to the pod.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      annotations: {}
-
-      # Additional labels to add to the pod.
-      # type: map
-      # example: { "example.com/hello": "world" }
-      labels: {}
-
-    # Specify which node or nodes can be used to host this pod.
-    # Leave as an empty map to allow the pod to be spawned anywhere.
+    # Additional labels to add to the pod.
     # type: map
-    # example: { "kubernetes.io/arch": "amd64" }
-    nodeSelector: {}
+    # example: { "example.com/hello": "world" }
+    labels: {}
 
-    # Optionally specify how much of each resource the pod will need.
-    resources:
-      # Maximum limits that the pod can not exceed.
-      # Set to ~ or null to disable the resource limits.
-      limits:
-        # Maximum CPU that the pod can not exceed.
-        # type: string
-        # example: "1000m"
-        cpu: ~
-        # Maximum RAM that the pod can not exceed.
-        # type: string
-        # example: "1024Mi"
-        memory: ~
-      # Requested limits for scheduling the pod on nodes.
-      # Set to ~ or null to disable the resource requests.
-      requests:
-        # The requested amount of CPU
-        # type: string
-        # example: "500m"
-        cpu: ~
-        # The requested amount of CPU
-        # type: string
-        # example: "512Mi"
-        memory: ~
+  # Specify which node or nodes can be used to host this pod.
+  # Leave as an empty map to allow the pod to be spawned anywhere.
+  # type: map
+  # example: { "kubernetes.io/arch": "amd64" }
+  nodeSelector: {}
+
+  # Optionally specify how much of each resource the pod will need.
+  resources:
+    # Maximum limits that the pod can not exceed.
+    # Set to ~ or null to disable the resource limits.
+    limits:
+      # Maximum CPU that the pod can not exceed.
+      # type: string
+      # example: "1000m"
+      cpu: ~
+      # Maximum RAM that the pod can not exceed.
+      # type: string
+      # example: "1024Mi"
+      memory: ~
+    # Requested limits for scheduling the pod on nodes.
+    # Set to ~ or null to disable the resource requests.
+    requests:
+      # The requested amount of CPU
+      # type: string
+      # example: "500m"
+      cpu: ~
+      # The requested amount of CPU
+      # type: string
+      # example: "512Mi"
+      memory: ~
+
+minio:
+  # Docker image for the MinIO S3 storage.
+  image:
+    # Image name without the tag.
+    # type: string
+    name: "docker.io/minio/minio"
+
+    # Image tag.
+    # type: string
+    tag: "latest"
+
+    # Image pull policy.
+    # type: string
+    pullPolicy: "IfNotPresent"
+
+  # Automatic update policy with Keel
+  keel:
+    enabled: true
+    policy: "force"
+    matchTag: false
+
+  # The user ID to run with.
+  # type: integer
+  uid: "1000"
+
+  # The group ID to run with.
+  # type: integer
+  gid: "1000"
+
+  # Access key, any random string
+  # type: string
+  accessKey: "someAccessKey"
+
+  # Secret key, any random string
+  # type: string
+  secretKey: "Password1!"
+
+  # Storage options.
+  storage:
+    data:
+      # Capacity to request.
+      # type: string
+      capacity: "10Gi"
+
+      # Storage subdirectory
+      # type: string
+      dir: "loki/minio"
+
+      mode: "700"
+
+  # Additional environment variables for the pod.
+  # type: map
+  # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
+  env: []
+
+  # Service related variables
+  service:
+    # The kubernetes service type.
+    # type: string
+    type: "ClusterIP"
+
+    # Additional annotations to add to the service.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    annotations: {}
+
+    # Additional labels to add to the service.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    labels: {}
+  
+  # Pod related variables
+  pod:
+    # Additional annotations to add to the pod.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    annotations: {}
+
+    # Additional labels to add to the pod.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    labels: {}
+
+  # Specify which node or nodes can be used to host this pod.
+  # Leave as an empty map to allow the pod to be spawned anywhere.
+  # type: map
+  # example: { "kubernetes.io/arch": "amd64" }
+  nodeSelector: {}
+
+  # Optionally specify how much of each resource the pod will need.
+  resources:
+    # Maximum limits that the pod can not exceed.
+    # Set to ~ or null to disable the resource limits.
+    limits:
+      # Maximum CPU that the pod can not exceed.
+      # type: string
+      # example: "1000m"
+      cpu: ~
+      # Maximum RAM that the pod can not exceed.
+      # type: string
+      # example: "1024Mi"
+      memory: ~
+    # Requested limits for scheduling the pod on nodes.
+    # Set to ~ or null to disable the resource requests.
+    requests:
+      # The requested amount of CPU
+      # type: string
+      # example: "500m"
+      cpu: ~
+      # The requested amount of CPU
+      # type: string
+      # example: "512Mi"
+      memory: ~
+
+cassandra:
+  # Docker image for the cassandra storage.
+  image:
+    # Image name without the tag.
+    # type: string
+    name: "docker.io/library/cassandra"
+
+    # Image tag.
+    # type: string
+    tag: "4"
+
+    # Image pull policy.
+    # type: string
+    pullPolicy: "IfNotPresent"
+
+  # Automatic update policy with Keel
+  keel:
+    enabled: true
+    policy: "force"
+    matchTag: false
+
+  # The user ID to run with.
+  # type: integer
+  uid: "1000"
+
+  # The group ID to run with.
+  # type: integer
+  gid: "1000"
+
+  password: 'Password1!'
+
+  # Storage options.
+  storage:
+    data:
+      # Capacity to request.
+      # type: string
+      capacity: "10Gi"
+
+      # Storage subdirectory
+      # type: string
+      dir: "loki/cassandra"
+
+      mode: "700"
+
+  # Additional environment variables for the pod.
+  # type: map
+  # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
+  env: []
+
+  # Service related variables
+  service:
+    # The kubernetes service type.
+    # type: string
+    type: "ClusterIP"
+
+    # Additional annotations to add to the service.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    annotations: {}
+
+    # Additional labels to add to the service.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    labels: {}
+  
+  # Pod related variables
+  pod:
+    # Additional annotations to add to the pod.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    annotations: {}
+
+    # Additional labels to add to the pod.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    labels: {}
+
+  # Specify which node or nodes can be used to host this pod.
+  # Leave as an empty map to allow the pod to be spawned anywhere.
+  # type: map
+  # example: { "kubernetes.io/arch": "amd64" }
+  nodeSelector: {}
+
+  # Optionally specify how much of each resource the pod will need.
+  resources:
+    # Maximum limits that the pod can not exceed.
+    # Set to ~ or null to disable the resource limits.
+    limits:
+      # Maximum CPU that the pod can not exceed.
+      # type: string
+      # example: "1000m"
+      cpu: ~
+      # Maximum RAM that the pod can not exceed.
+      # type: string
+      # example: "1024Mi"
+      memory: ~
+    # Requested limits for scheduling the pod on nodes.
+    # Set to ~ or null to disable the resource requests.
+    requests:
+      # The requested amount of CPU
+      # type: string
+      # example: "500m"
+      cpu: ~
+      # The requested amount of CPU
+      # type: string
+      # example: "512Mi"
+      memory: ~

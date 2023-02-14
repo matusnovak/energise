@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "krokibpmn"
-  "service" .Values.gitlab.krokibpmn.service) }}
+  "service" .Values.krokibpmn.service) }}
   ports:
     - port: 8003
       protocol: "TCP"

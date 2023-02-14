@@ -1,0 +1,15 @@
+- name: "Deploy redis"
+  include_tasks: "redis.yml"
+  when: matrix.enabled
+
+- name: "Deploy synapse"
+  include_tasks: "synapse.yml"
+  when: matrix.enabled
+
+- name: "Deploy nginx"
+  include_tasks: "nginx.yml"
+  when: matrix.enabled
+
+- name: "Deploy element"
+  include_tasks: "element.yml"
+  when: matrix.enabled

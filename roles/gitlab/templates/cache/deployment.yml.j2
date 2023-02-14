@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ gitlab.cache.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if gitlab.cache.podAnnotations %}
+      annotations:
+        {{ gitlab.cache.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if gitlab.cache.podLabels %}
+        {{ gitlab.cache.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ gitlab.cache.name }}"
+      securityContext:
+        runAsUser: {{ gitlab.cache.uid }}
+        runAsGroup: {{ gitlab.cache.gid }}
+        fsGroup: {{ gitlab.cache.gid }}
+        allowPrivilegeEscalation: false
+{% if gitlab.cache.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ gitlab.cache.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ gitlab.cache.image.name }}:{{ gitlab.cache.image.tag }}"
+          imagePullPolicy: "{{ gitlab.cache.image.pullPolicy }}"
+          command:
+            - 'sh'
+          args:
+            - '-c'
+            - |
+              id;
+              stat "/export";
+              mkdir -p "/export/${MINIO_BUCKET_NAME}";
+              minio server "/export";
+          env:
+            - name: "MINIO_ROOT_USER"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ gitlab.cache.name }}"
+                  key: accessKey
+                  optional: false
+            - name: "MINIO_ROOT_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ gitlab.cache.name }}"
+                  key: secretKey
+                  optional: false
+            - name: "MINIO_BROWSER"
+              value: "off"
+            - name: "MINIO_BUCKET_NAME"
+              value: "{{ gitlab.cache.bucket.name }}"
+            - name: "MINIO_USERNAME"
+              value: "minio"
+            - name: "MINIO_GROUPNAME"
+              value: "minio"
+{% if gitlab.cache.env %}
+            {{ gitlab.cache.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          ports:
+            - name: s3
+              containerPort: 9000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: s3
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: s3
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ gitlab.cache.resources | to_nice_yaml | indent(12) }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data-volume
+              mountPath: /export
+      nodeSelector:
+        {{ gitlab.cache.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ gitlab.cache.name }}"

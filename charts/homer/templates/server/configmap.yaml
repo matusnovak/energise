@@ -19,9 +19,34 @@ data:
       layout: list
       colorTheme: auto
 
-    theme: {{ .Values.homer.server.theme }}
+    theme: {{ .Values.server.theme }}
 
     services:
+      - name: "Applications"
+        icon: "fas fa-code-branch"
+        items:
+          {{- if .Values.global.deploy.drawio }}
+          - name: "Draw.io"
+            icon: "fas fa-pen-nib"
+            subtitle: "Diagramming/whiteboarding visualization application"
+            tag: "draw"
+            url: "https://{{ .Values.global.drawio.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+          {{- if .Values.global.deploy.haste }}
+          - name: "Hastebin"
+            icon: "fas fa-file-pen"
+            subtitle: "Haste is an open-source pastebin software"
+            tag: "text"
+            url: "https://{{ .Values.global.haste.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+          {{- if .Values.global.deploy.gitlab }}
+          - name: "GitLab"
+            icon: "fa-brands fa-gitlab"
+            subtitle: "Code repository and collaborative software"
+            tag: "git"
+            url: "https://{{ .Values.global.gitlab.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+
       - name: "System"
         icon: "fas fa-code-branch"
         items:
@@ -85,6 +110,6 @@ data:
           - name: "Keel"
             icon: "fas fa-cloud-arrow-down"
             subtitle: "Automate Kubernetes updates"
-            tag: "database"
+            tag: "kubernetes"
             url: "https://{{ .Values.global.keel.server.subdomain }}.{{ .Values.global.domain }}/"
           {{- end }}

@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "smtp"
-  "service" .Values.gitlab.smtp.service) }}
+  "service" .Values.smtp.service) }}
   ports:
     - port: 587
       protocol: "TCP"

@@ -15,22 +15,22 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "krokibpmn"
-      "annotations" .Values.gitlab.krokibpmn.pod.annotations) | nindent 4}}
+      "annotations" .Values.krokibpmn.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-krokibpmn"
       securityContext:
-        runAsUser: {{ .Values.gitlab.krokibpmn.uid }}
-        runAsGroup: {{ .Values.gitlab.krokibpmn.gid }}
-        fsGroup: {{ .Values.gitlab.krokibpmn.gid }}
-      {{- with .Values.gitlab.krokibpmn.pullSecret }}
+        runAsUser: {{ .Values.krokibpmn.uid }}
+        runAsGroup: {{ .Values.krokibpmn.gid }}
+        fsGroup: {{ .Values.krokibpmn.gid }}
+      {{- with .Values.krokibpmn.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-krokibpmn"
-          image: "{{ .Values.gitlab.krokibpmn.image.name }}:{{ .Values.gitlab.krokibpmn.image.tag }}"
-          imagePullPolicy: "{{ .Values.gitlab.krokibpmn.image.pullPolicy }}"
-          {{- with .Values.gitlab.krokibpmn.env }}
+          image: "{{ .Values.krokibpmn.image.name }}:{{ .Values.krokibpmn.image.tag }}"
+          imagePullPolicy: "{{ .Values.krokibpmn.image.pullPolicy }}"
+          {{- with .Values.krokibpmn.env }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -38,33 +38,15 @@ spec:
             - name: web
               containerPort: 8003
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: web
-            failureThreshold: 3
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 2
-          readinessProbe:
-            httpGet:
-              path: /
-              port: web
-            failureThreshold: 1
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.gitlab.krokibpmn.resources | nindent 12 }}
+            {{- toYaml .Values.krokibpmn.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/data"
       nodeSelector:
-        {{- toYaml .Values.gitlab.krokibpmn.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.krokibpmn.nodeSelector | nindent 8 }}
       volumes:
         - name: "data-volume"
           emptyDir: {}

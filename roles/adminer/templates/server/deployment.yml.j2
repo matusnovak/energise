@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ adminer.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if adminer.server.podAnnotations %}
+      annotations:
+        {{ adminer.server.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if adminer.server.podLabels %}
+        {{ adminer.server.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ adminer.server.name }}"
+      securityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+{% if adminer.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ adminer.server.pullSecret }}"
+{% endif %}
+{% if adminer.server.auth.enabled %}
+      initContainers:
+        {{ lookup('template', openldap_container_add_group_path, template_vars=dict(ldap_group_name=adminer.server.auth.group)) | indent(8) }}
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ adminer.server.image.name }}:{{ adminer.server.image.tag }}"
+          imagePullPolicy: "{{ adminer.server.image.pullPolicy }}"
+          env:
+            - name: ADMINER_DEFAULT_SERVER
+              value: "{{ postgres_server_url }}"
+            - name: ADMINER_DESIGN
+              value: "nette"
+{% if adminer.server.env %}
+          env:
+            {{ adminer.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ adminer.server.resources | to_nice_yaml | indent(12) }}
+      nodeSelector:
+        {{ adminer.server.nodeSelector | to_nice_yaml | indent(8) }}

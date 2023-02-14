@@ -16,31 +16,31 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "server"
-      "annotations" .Values.prometheus.server.pod.annotations
+      "annotations" .Values.server.pod.annotations
       "checksum" $configMapHash) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-server"
       securityContext:
-        runAsUser: {{ .Values.prometheus.server.uid }}
-        runAsGroup: {{ .Values.prometheus.server.gid }}
-        fsGroup: {{ .Values.prometheus.server.gid }}
-      {{- with .Values.prometheus.server.pullSecret }}
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
-      {{- if .Values.prometheus.server.auth.enabled }}
+      {{- if .Values.server.auth.enabled }}
       initContainers:
         {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
-        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.prometheus.server.auth.group) | nindent 8 }}
+        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.server.auth.group) | nindent 8 }}
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-server"
-          image: "{{ .Values.prometheus.server.image.name }}:{{ .Values.prometheus.server.image.tag }}"
-          imagePullPolicy: "{{ .Values.prometheus.server.image.pullPolicy }}"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
           args:
             - '--config.file=/etc/prometheus/prometheus.yml'
             - '--storage.tsdb.path=/prometheus'
-          {{- with .Values.prometheus.server.env }}
+          {{- with .Values.server.env }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -67,7 +67,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.prometheus.server.resources | nindent 12 }}
+            {{- toYaml .Values.server.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
@@ -78,7 +78,7 @@ spec:
             - name: "data-volume"
               mountPath: "/prometheus"
       nodeSelector:
-        {{- toYaml .Values.prometheus.server.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
       volumes:
         - name: "config-volume"
           configMap:

@@ -6,7 +6,7 @@ DIR="$(dirname "$(realpath "$0")")"
 
 helm upgrade \
     --install \
-    --values ./energise.yaml \
+    --values ./energise.yml \
     --namespace homelab \
     --create-namespace \
     homelab "${DIR}"

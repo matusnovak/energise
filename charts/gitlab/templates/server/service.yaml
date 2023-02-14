@@ -1,0 +1,29 @@
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "service" .Values.server.service) }}
+  ports:
+    - port: 80
+      protocol: TCP
+      name: "web"
+    - port: 81
+      protocol: TCP
+      name: "registry"
+    - port: 82
+      protocol: TCP
+      name: "pages"
+---
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "service" .Values.server.service
+  "suffix" "ssh") }}
+  ports:
+    - port: {{ .Values.server.sshPort }}
+      targetPort: "ssh"
+      protocol: TCP
+      name: ssh

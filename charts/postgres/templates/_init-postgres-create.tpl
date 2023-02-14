@@ -1,5 +1,5 @@
 {{- define "init-postgres-create" -}}
-{{ $postgres := (.Values.postgres | default .Values.global.postgres) -}}
+{{- $postgres := ((.Values.server.isPostgres | default false) | ternary .Values .Values.global.postgres) -}}
 - name: "init-postgres-create"
   image: "{{ $postgres.server.image.name }}:{{ $postgres.server.image.tag }}"
   imagePullPolicy: "{{ $postgres.server.image.pullPolicy }}"

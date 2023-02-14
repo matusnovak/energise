@@ -3,16 +3,16 @@
   "Release" .Release
   "Chart" .Chart
   "component" "server"
-  "service" .Values.traefik.server.service) }}
+  "service" .Values.server.service) }}
   ports:
-{{- if .Values.traefik.server.http.enabled }}
-    - port: {{ .Values.traefik.server.http.exposedPort }}
+{{- if .Values.server.http.enabled }}
+    - port: {{ .Values.server.http.exposedPort }}
       targetPort: web
       protocol: TCP
       name: web
 {{- end }}
-{{- if .Values.traefik.server.http.enabled }}
-    - port: {{ .Values.traefik.server.https.exposedPort }}
+{{- if .Values.server.http.enabled }}
+    - port: {{ .Values.server.https.exposedPort }}
       targetPort: websecure
       protocol: TCP
       name: websecure
@@ -24,16 +24,16 @@
   "Chart" .Chart
   "component" "server"
   "suffix" "-internal"
-  "service" .Values.traefik.server.serviceInternal
-  "scrape" .Values.traefik.server.port) }}
+  "service" .Values.server.serviceInternal
+  "scrape" .Values.server.port) }}
   ports:
-{{- if .Values.traefik.server.http.enabled }}
-    - port: {{ .Values.traefik.server.http.exposedPort }}
+{{- if .Values.server.http.enabled }}
+    - port: {{ .Values.server.http.exposedPort }}
       targetPort: web
       protocol: TCP
       name: web
 {{- end }}
-    - port: {{ .Values.traefik.server.port }}
+    - port: {{ .Values.server.port }}
       targetPort: traefik
       protocol: TCP
       name: traefik

@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "cassandra"
-  "service" .Values.loki.cassandra.service) }}
+  "service" .Values.cassandra.service) }}
   ports:
     - port: 9042
       protocol: "TCP"

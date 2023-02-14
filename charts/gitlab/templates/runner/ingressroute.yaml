@@ -2,11 +2,11 @@
   "Values" .Values
   "Release" .Release
   "Chart" .Chart
-  "component" "proxy") }}
+  "component" "runner") }}
   routes:
-    - match: Host(`{{ .Values.gatus.proxy.subdomain }}.{{ .Values.global.domain }}`)
+    - match: Host(`{{ .Values.runner.subdomain }}.{{ .Values.global.domain }}`)
       kind: Rule
       services:
-       - name: "{{ .Chart.Name }}-proxy"
+       - name: "{{ .Chart.Name }}-runner"
          namespace: "{{ .Release.Namespace }}"
-         port: 8080
+         port: 8093

@@ -4,4 +4,4 @@
   "Chart" .Chart
   "component" "storage"
   "name" "data"
-  "storage" .Values.gitlab.storage.storage.data) }}
+  "storage" .Values.storage.storage.data) }}

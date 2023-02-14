@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ haste.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if haste.server.podAnnotations %}
+      annotations:
+        {{ haste.server.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if haste.server.podLabels %}
+        {{ haste.server.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ haste.server.name }}"
+      securityContext:
+        runAsUser: {{ haste.server.uid }}
+        runAsGroup: {{ haste.server.gid }}
+        fsGroup: {{ haste.server.gid }}
+        allowPrivilegeEscalation: false
+{% if haste.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ haste.server.pullSecret }}"
+{% endif %}
+{% if haste.server.auth.enabled %}
+      initContainers:
+        {{ lookup('template', openldap_container_add_group_path, template_vars=dict(ldap_group_name=haste.server.auth.group)) | indent(8) }}
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ haste.server.image.name }}:{{ haste.server.image.tag }}"
+          imagePullPolicy: "{{ haste.server.image.pullPolicy }}"
+          env:
+            - name: STORAGE_TYPE
+              value: "file"
+            - name: STORAGE_FILEPATH
+              value: "/data"
+{% if haste.server.env %}
+            {{ haste.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          ports:
+            - name: web
+              containerPort: 7777
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ haste.server.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/data"
+      nodeSelector:
+        {{ haste.server.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ haste.server.name }}"

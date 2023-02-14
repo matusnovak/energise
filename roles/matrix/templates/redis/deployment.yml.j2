@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ matrix.redis.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+{% if matrix.redis.podAnnotations %}
+      annotations:
+        {{ matrix.redis.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if matrix.redis.podLabels %}
+        {{ matrix.redis.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ matrix.redis.name }}"
+      securityContext:
+        allowPrivilegeEscalation: false
+{% if matrix.redis.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ matrix.redis.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ matrix.redis.image.name }}:{{ matrix.redis.image.tag }}"
+          imagePullPolicy: "{{ matrix.redis.image.pullPolicy }}"
+          command:
+            - 'redis-server'
+          args:
+            - '--requirepass'
+            - '{{ matrix.redis.password }}'
+{% if matrix.redis.env %}
+          env:
+            {{ matrix.redis.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - "redis-cli"
+                - "ping"
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ matrix.redis.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/data"
+      nodeSelector:
+        {{ matrix.redis.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: "data-volume"
+          emptyDir: {}

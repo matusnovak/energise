@@ -15,21 +15,21 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "minio"
-      "annotations" .Values.grafana.minio.pod.annotations) | nindent 4}}
+      "annotations" .Values.minio.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-minio"
       securityContext:
-        runAsUser: {{ .Values.grafana.minio.uid }}
-        runAsGroup: {{ .Values.grafana.minio.gid }}
-        fsGroup: {{ .Values.grafana.minio.gid }}
-      {{- with .Values.grafana.minio.pullSecret }}
+        runAsUser: {{ .Values.minio.uid }}
+        runAsGroup: {{ .Values.minio.gid }}
+        fsGroup: {{ .Values.minio.gid }}
+      {{- with .Values.minio.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-minio"
-          image: "{{ .Values.grafana.minio.image.name }}:{{ .Values.grafana.minio.image.tag }}"
-          imagePullPolicy: "{{ .Values.grafana.minio.image.pullPolicy }}"
+          image: "{{ .Values.minio.image.name }}:{{ .Values.minio.image.tag }}"
+          imagePullPolicy: "{{ .Values.minio.image.pullPolicy }}"
           command:
             - 'sh'
           args:
@@ -60,7 +60,7 @@ spec:
               value: "minio"
             - name: "MINIO_GROUPNAME"
               value: "minio"
-          {{- with .Values.grafana.minio.env }}
+          {{- with .Values.minio.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -86,14 +86,14 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.grafana.minio.resources | nindent 12 }}
+            {{- toYaml .Values.minio.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/export"
       nodeSelector:
-        {{- toYaml .Values.grafana.minio.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.minio.nodeSelector | nindent 8 }}
       volumes:
         - name: "data-volume"
           persistentVolumeClaim:

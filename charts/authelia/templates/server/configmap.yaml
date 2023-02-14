@@ -9,10 +9,10 @@ data:
       host: 0.0.0.0
       port: 9091
 
-    jwt_secret: "{{ .Values.authelia.server.jwtSecret }}"
+    jwt_secret: "{{ .Values.server.jwtSecret }}"
 
     log:
-      level: "{{ .Values.authelia.server.log.level }}"
+      level: "{{ .Values.server.log.level }}"
 
     telemetry:
       metrics:
@@ -21,7 +21,7 @@ data:
 
     session:
       name: authelia_session
-      secret: "{{ .Values.authelia.server.jwtSecret }}"
+      secret: "{{ .Values.server.jwtSecret }}"
       expiration: 3600
       inactivity: 300
       domain: "{{ .Values.global.domain }}"
@@ -29,16 +29,16 @@ data:
       redis:
         host: "{{ .Chart.Name }}-redis.{{ .Release.Namespace }}.svc.cluster.local"
         port: 6379
-        password: "{{ .Values.authelia.redis.password }}"
+        password: "{{ .Values.redis.password }}"
 
     storage:
-      encryption_key: "{{ .Values.authelia.server.encryptionKey }}"
+      encryption_key: "{{ .Values.server.encryptionKey }}"
       postgres:
         host: "postgres-server.{{ .Release.Namespace }}.svc.cluster.local"
         port: 5432
-        database: "{{ .Values.authelia.server.database.name }}"
-        username: "{{ .Values.authelia.server.database.role }}"
-        password: "{{ .Values.authelia.server.database.password }}"
+        database: "{{ .Values.server.database.name }}"
+        username: "{{ .Values.server.database.role }}"
+        password: "{{ .Values.server.database.password }}"
         ssl:
           mode: "disable"
 
@@ -74,6 +74,16 @@ data:
         {{- if and (.Values.global.deploy.prometheus) (.Values.global.prometheus.server.auth.enabled) }}
         - domain: "{{ .Values.global.prometheus.server.subdomain }}.{{ .Values.global.domain }}"
           subject: "group:{{ .Values.global.prometheus.server.auth.group }}"
+          policy: "one_factor"
+        {{- end }}
+        {{- if and (.Values.global.deploy.drawio) (.Values.global.drawio.server.auth.enabled) }}
+        - domain: "{{ .Values.global.drawio.server.subdomain }}.{{ .Values.global.domain }}"
+          subject: "group:{{ .Values.global.drawio.server.auth.group }}"
+          policy: "one_factor"
+        {{- end }}
+        {{- if and (.Values.global.deploy.haste) (.Values.global.haste.server.auth.enabled) }}
+        - domain: "{{ .Values.global.haste.server.subdomain }}.{{ .Values.global.domain }}"
+          subject: "group:{{ .Values.global.haste.server.auth.group }}"
           policy: "one_factor"
         {{- end }}
     authentication_backend:

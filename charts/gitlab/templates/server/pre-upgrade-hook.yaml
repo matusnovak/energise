@@ -1,0 +1,47 @@
+{{- include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "git"
+  "storage" .Values.server.storage.git) }}
+---
+{{- include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "logs"
+  "storage" .Values.server.storage.logs) }}
+---
+{{- include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "config"
+  "storage" .Values.server.storage.config) }}
+---
+{{- include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "shared"
+  "storage" .Values.server.storage.shared) }}
+---
+{{- include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "builds"
+  "storage" .Values.server.storage.builds) }}
+---
+{{- include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "ssh"
+  "storage" .Values.server.storage.ssh) }}

@@ -15,15 +15,15 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "server"
-      "annotations" .Values.openldap.server.pod.annotations
+      "annotations" .Values.server.pod.annotations
       "checksum" $configMapHash) | nindent 4}}
     spec:
       initContainers:
         {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
       containers:
         - name: job
-          image: "{{ .Values.openldap.server.image.name }}:{{ .Values.openldap.server.image.tag }}"
-          imagePullPolicy: "{{ .Values.openldap.server.image.pullPolicy }}"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
           command:
             - '/bin/bash'
             - '/scripts/job.sh'

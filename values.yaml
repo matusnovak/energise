@@ -19,6 +19,8 @@ global:
     adminer: false
     gitlab: false
     keel: false
+    drawio: false
+    haste: false
 
   storage:
     class: 'default'

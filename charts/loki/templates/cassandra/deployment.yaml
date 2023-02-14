@@ -15,21 +15,21 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "cassandra"
-      "annotations" .Values.loki.cassandra.pod.annotations) | nindent 4}}
+      "annotations" .Values.cassandra.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-cassandra"
       securityContext:
-        runAsUser: {{ .Values.loki.cassandra.uid }}
-        runAsGroup: {{ .Values.loki.cassandra.gid }}
-        fsGroup: {{ .Values.loki.cassandra.gid }}
-      {{- with .Values.loki.cassandra.pullSecret }}
+        runAsUser: {{ .Values.cassandra.uid }}
+        runAsGroup: {{ .Values.cassandra.gid }}
+        fsGroup: {{ .Values.cassandra.gid }}
+      {{- with .Values.cassandra.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-cassandra"
-          image: "{{ .Values.loki.cassandra.image.name }}:{{ .Values.loki.cassandra.image.tag }}"
-          imagePullPolicy: "{{ .Values.loki.cassandra.image.pullPolicy }}"
+          image: "{{ .Values.cassandra.image.name }}:{{ .Values.cassandra.image.tag }}"
+          imagePullPolicy: "{{ .Values.cassandra.image.pullPolicy }}"
           env:
             - name: "CASSANDRA_TRANSPORT_PORT_NUMBER"
               value: '7000'
@@ -47,7 +47,7 @@ spec:
               value: '128M'
             - name: "MAX_HEAP_SIZE"
               value: '1024M'
-          {{- with .Values.loki.cassandra.env }}
+          {{- with .Values.cassandra.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -80,14 +80,14 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.loki.cassandra.resources | nindent 12 }}
+            {{- toYaml .Values.cassandra.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/var/lib/cassandra"
       nodeSelector:
-        {{- toYaml .Values.loki.cassandra.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.cassandra.nodeSelector | nindent 8 }}
       volumes:
         - name: "data-volume"
           persistentVolumeClaim:

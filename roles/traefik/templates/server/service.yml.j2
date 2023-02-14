@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ traefik.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if traefik.server.serviceLabels -%}
+    {{ traefik.server.serviceLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if traefik.server.serviceAnnotations -%}
+  annotations:
+    {{ traefik.server.serviceAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ traefik.server.serviceType }}"
+  ports:
+{% if traefik.server.http.enabled %}
+    - port: {{ traefik.server.http.exposedPort }}
+      targetPort: web
+      protocol: TCP
+      name: web
+{% endif %}
+{% if traefik.server.https.enabled %}
+    - port: {{ traefik.server.https.exposedPort }}
+      targetPort: websecure
+      protocol: TCP
+      name: websecure
+{% endif %}
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ traefik.server.name }}-internal"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if traefik.server.serviceLabels -%}
+    {{ traefik.server.serviceLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if traefik.server.internalServiceAnnotations -%}
+  annotations:
+    {{ traefik.server.internalServiceAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ traefik.server.internalServiceType }}"
+  ports:
+    - port: {{ traefik.server.port }}
+      targetPort: traefik
+      protocol: TCP
+      name: traefik
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}

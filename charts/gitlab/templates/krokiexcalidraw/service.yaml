@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "krokiexcalidraw"
-  "service" .Values.gitlab.krokiexcalidraw.service) }}
+  "service" .Values.krokiexcalidraw.service) }}
   ports:
     - port: 8004
       protocol: "TCP"

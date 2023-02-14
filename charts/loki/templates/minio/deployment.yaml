@@ -15,21 +15,21 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "minio"
-      "annotations" .Values.loki.minio.pod.annotations) | nindent 4}}
+      "annotations" .Values.minio.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-minio"
       securityContext:
-        runAsUser: {{ .Values.loki.minio.uid }}
-        runAsGroup: {{ .Values.loki.minio.gid }}
-        fsGroup: {{ .Values.loki.minio.gid }}
-      {{- with .Values.loki.minio.pullSecret }}
+        runAsUser: {{ .Values.minio.uid }}
+        runAsGroup: {{ .Values.minio.gid }}
+        fsGroup: {{ .Values.minio.gid }}
+      {{- with .Values.minio.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-minio"
-          image: "{{ .Values.loki.minio.image.name }}:{{ .Values.loki.minio.image.tag }}"
-          imagePullPolicy: "{{ .Values.loki.minio.image.pullPolicy }}"
+          image: "{{ .Values.minio.image.name }}:{{ .Values.minio.image.tag }}"
+          imagePullPolicy: "{{ .Values.minio.image.pullPolicy }}"
           command:
             - 'sh'
           args:
@@ -60,7 +60,7 @@ spec:
               value: "minio"
             - name: "MINIO_GROUPNAME"
               value: "minio"
-          {{- with .Values.loki.minio.env }}
+          {{- with .Values.minio.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -86,14 +86,14 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.loki.minio.resources | nindent 12 }}
+            {{- toYaml .Values.minio.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/export"
       nodeSelector:
-        {{- toYaml .Values.loki.minio.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.minio.nodeSelector | nindent 8 }}
       volumes:
         - name: "data-volume"
           persistentVolumeClaim:

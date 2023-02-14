@@ -15,21 +15,21 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "smtp"
-      "annotations" .Values.gitlab.smtp.pod.annotations) | nindent 4}}
+      "annotations" .Values.smtp.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-smtp"
       securityContext:
-        runAsUser: {{ .Values.gitlab.smtp.uid }}
-        runAsGroup: {{ .Values.gitlab.smtp.gid }}
-        fsGroup: {{ .Values.gitlab.smtp.gid }}
-      {{- with .Values.gitlab.smtp.pullSecret }}
+        runAsUser: {{ .Values.smtp.uid }}
+        runAsGroup: {{ .Values.smtp.gid }}
+        fsGroup: {{ .Values.smtp.gid }}
+      {{- with .Values.smtp.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-smtp"
-          image: "{{ .Values.gitlab.smtp.image.name }}:{{ .Values.gitlab.smtp.image.tag }}"
-          imagePullPolicy: "{{ .Values.gitlab.smtp.image.pullPolicy }}"
+          image: "{{ .Values.smtp.image.name }}:{{ .Values.smtp.image.tag }}"
+          imagePullPolicy: "{{ .Values.smtp.image.pullPolicy }}"
           env:
             - name: "RELAY_NETWORKS"
               value: ":192.168.0.0/24:10.0.0.0/8:127.0.0.1/24"
@@ -37,7 +37,7 @@ spec:
               value: "true"
             - name: "PORT"
               value: "587"
-          {{- with .Values.gitlab.smtp.env }}
+          {{- with .Values.smtp.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -45,14 +45,14 @@ spec:
               containerPort: 587
               protocol: TCP
           resources:
-            {{- toYaml .Values.gitlab.smtp.resources | nindent 12 }}
+            {{- toYaml .Values.smtp.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/data"
       nodeSelector:
-        {{- toYaml .Values.gitlab.smtp.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.smtp.nodeSelector | nindent 8 }}
       volumes:
         - name: "data-volume"
           emptyDir: {}

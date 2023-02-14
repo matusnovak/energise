@@ -15,21 +15,21 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "cache"
-      "annotations" .Values.gitlab.cache.pod.annotations) | nindent 4}}
+      "annotations" .Values.cache.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-cache"
       securityContext:
-        runAsUser: {{ .Values.gitlab.cache.uid }}
-        runAsGroup: {{ .Values.gitlab.cache.gid }}
-        fsGroup: {{ .Values.gitlab.cache.gid }}
-      {{- with .Values.gitlab.cache.pullSecret }}
+        runAsUser: {{ .Values.cache.uid }}
+        runAsGroup: {{ .Values.cache.gid }}
+        fsGroup: {{ .Values.cache.gid }}
+      {{- with .Values.cache.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-cache"
-          image: "{{ .Values.gitlab.cache.image.name }}:{{ .Values.gitlab.cache.image.tag }}"
-          imagePullPolicy: "{{ .Values.gitlab.cache.image.pullPolicy }}"
+          image: "{{ .Values.cache.image.name }}:{{ .Values.cache.image.tag }}"
+          imagePullPolicy: "{{ .Values.cache.image.pullPolicy }}"
           command:
             - 'sh'
           args:
@@ -55,12 +55,12 @@ spec:
             - name: "MINIO_BROWSER"
               value: "off"
             - name: "MINIO_BUCKET_NAME"
-              value: "{{ .Values.gitlab.cache.bucket.name }}"
+              value: "{{ .Values.cache.bucket.name }}"
             - name: "MINIO_USERNAME"
               value: "cache"
             - name: "MINIO_GROUPNAME"
               value: "cache"
-          {{- with .Values.gitlab.cache.env }}
+          {{- with .Values.cache.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -86,14 +86,14 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.gitlab.cache.resources | nindent 12 }}
+            {{- toYaml .Values.cache.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/export"
       nodeSelector:
-        {{- toYaml .Values.gitlab.cache.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.cache.nodeSelector | nindent 8 }}
       volumes:
         - name: "data-volume"
           persistentVolumeClaim:

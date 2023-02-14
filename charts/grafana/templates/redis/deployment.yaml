@@ -15,22 +15,22 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "redis"
-      "annotations" .Values.grafana.redis.pod.annotations) | nindent 4}}
+      "annotations" .Values.redis.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-redis"
       securityContext:
-        runAsUser: {{ .Values.grafana.redis.uid }}
-        runAsGroup: {{ .Values.grafana.redis.gid }}
-        fsGroup: {{ .Values.grafana.redis.gid }}
-      {{- with .Values.grafana.redis.pullSecret }}
+        runAsUser: {{ .Values.redis.uid }}
+        runAsGroup: {{ .Values.redis.gid }}
+        fsGroup: {{ .Values.redis.gid }}
+      {{- with .Values.redis.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-redis"
-          image: "{{ .Values.grafana.redis.image.name }}:{{ .Values.grafana.redis.image.tag }}"
-          imagePullPolicy: "{{ .Values.grafana.redis.image.pullPolicy }}"
-          {{- with .Values.grafana.redis.env }}
+          image: "{{ .Values.redis.image.name }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: "{{ .Values.redis.image.pullPolicy }}"
+          {{- with .Values.redis.env }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -38,7 +38,7 @@ spec:
             - 'redis-server'
           args:
             - '--requirepass'
-            - '{{ .Values.grafana.redis.password }}'
+            - '{{ .Values.redis.password }}'
           ports:
             - name: redis
               containerPort: 6379
@@ -62,14 +62,14 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.grafana.redis.resources | nindent 12 }}
+            {{- toYaml .Values.redis.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/data"
       nodeSelector:
-        {{- toYaml .Values.grafana.redis.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.redis.nodeSelector | nindent 8 }}
       volumes:
         - name: "data-volume"
           emptyDir: {}

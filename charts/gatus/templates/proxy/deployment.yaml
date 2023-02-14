@@ -16,27 +16,27 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "proxy"
-      "annotations" .Values.gatus.proxy.pod.annotations
+      "annotations" .Values.proxy.pod.annotations
       "checksum" $configMapHash) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-proxy"
       enableServiceLinks: false
       securityContext:
-        runAsUser: {{ .Values.gatus.proxy.uid }}
-        runAsGroup: {{ .Values.gatus.proxy.gid }}
-        fsGroup: {{ .Values.gatus.proxy.gid }}
-      {{- with .Values.gatus.proxy.pullSecret }}
+        runAsUser: {{ .Values.proxy.uid }}
+        runAsGroup: {{ .Values.proxy.gid }}
+        fsGroup: {{ .Values.proxy.gid }}
+      {{- with .Values.proxy.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-proxy"
-          image: "{{ .Values.gatus.proxy.image.name }}:{{ .Values.gatus.proxy.image.tag }}"
-          imagePullPolicy: "{{ .Values.gatus.proxy.image.pullPolicy }}"
+          image: "{{ .Values.proxy.image.name }}:{{ .Values.proxy.image.tag }}"
+          imagePullPolicy: "{{ .Values.proxy.image.pullPolicy }}"
           env:
             - name: KUBERNETES_NAMESPACE
               value: "{{ .Release.Namespace }}"
-          {{- with .Values.gatus.proxy.env }}
+          {{- with .Values.proxy.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -62,7 +62,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.gatus.proxy.resources | nindent 12 }}
+            {{- toYaml .Values.proxy.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
@@ -71,7 +71,7 @@ spec:
               subPath: "main.py"
               readOnly: true
       nodeSelector:
-        {{- toYaml .Values.gatus.proxy.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.proxy.nodeSelector | nindent 8 }}
       volumes:
         - name: "config-volume"
           configMap:

@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "server"
-  "service" .Values.homer.server.service) }}
+  "service" .Values.server.service) }}
   ports:
     - port: 8080
       protocol: "TCP"

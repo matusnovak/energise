@@ -1,0 +1,29 @@
+- name: "init-postgres"
+  image: "{{ postgres.server.image.name }}:{{ postgres.server.image.tag }}"
+  imagePullPolicy: "{{ postgres.server.image.pullPolicy }}"
+  command:
+    - 'sh'
+    - '-c'
+    - |
+      until psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_ROLE -d $POSTGRES_DB -c "select 1"; do echo "waiting for database"; sleep 2; done;
+      echo "SELECT 'CREATE DATABASE {{ database.name }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ database.name }}')\gexec" | psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_ROLE -d $POSTGRES_DB;
+      echo "SELECT 'CREATE ROLE {{ database.role }} WITH LOGIN PASSWORD ''{{ database.password }}''' WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '{{ database.role }}')\gexec" | psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_ROLE -d $POSTGRES_DB;
+      echo "GRANT ALL PRIVILEGES ON DATABASE {{ database.name }} TO {{ database.role }}" | psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_ROLE -d $POSTGRES_DB;
+{% if database.superuser is defined and database.superuser == true %}
+      echo "ALTER ROLE {{ database.role }} WITH SUPERUSER;" | psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_ROLE -d $POSTGRES_DB;
+{% endif %}
+  env:
+    - name: POSTGRES_HOST
+      value: "{{ postgres_server_url }}"
+    - name: POSTGRES_PORT
+      value: "5432"
+    - name: POSTGRES_ROLE
+      value: "{{ postgres.server.user }}"
+    - name: POSTGRES_DB
+      value: "{{ postgres.server.database }}"
+    - name: PGPASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: "{{ postgres.server.name }}"
+          key: password
+          optional: false

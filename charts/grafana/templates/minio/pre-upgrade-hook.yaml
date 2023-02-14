@@ -4,4 +4,4 @@
   "Chart" .Chart
   "component" "minio"
   "name" "data"
-  "storage" .Values.grafana.minio.storage.data) }}
+  "storage" .Values.minio.storage.data) }}

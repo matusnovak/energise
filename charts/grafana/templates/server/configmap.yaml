@@ -8,11 +8,11 @@ data:
     [server]
     protocol = http
     http_port = 3000
-    domain = {{ .Values.grafana.subdomain }}.{{ .Values.global.domain }}
+    domain = {{ .Values.subdomain }}.{{ .Values.global.domain }}
 
     [remote_cache]
     type = redis
-    connstr = addr={{ .Chart.Name }}-redis.{{ .Release.Namespace }}.svc.cluster.local:6379,pool_size=100,db=0,ssl=false,password={{ .Values.grafana.redis.password }}
+    connstr = addr={{ .Chart.Name }}-redis.{{ .Release.Namespace }}.svc.cluster.local:6379,pool_size=100,db=0,ssl=false,password={{ .Values.redis.password }}
 
     [analytics]
     reporting_enabled = false
@@ -50,8 +50,8 @@ data:
     endpoint = {{ .Chart.Name }}-minio.{{ .Release.Namespace }}.svc.cluster.local
     path_style_access = true
     bucket = attachments
-    access_key = {{ .Values.grafana.minio.accessKey }}
-    secret_key = {{ .Values.grafana.minio.secretKey }}
+    access_key = {{ .Values.minio.accessKey }}
+    secret_key = {{ .Values.minio.secretKey }}
 
   "ldap.toml": |
     [[servers]]
@@ -62,7 +62,7 @@ data:
     ssl_skip_verify = false
     bind_dn = "cn=readonly,{{ .Values.global.domainComponent }}"
     bind_password = "{{ .Values.global.openldap.server.readonlyPassword }}"
-    search_filter = "(&(memberOf={{ printf "cn=%s,ou=%s,%s" .Values.grafana.server.auth.group "groups" .Values.global.domainComponent }})(uid=%s))"
+    search_filter = "(&(memberOf={{ printf "cn=%s,ou=%s,%s" .Values.server.auth.group "groups" .Values.global.domainComponent }})(uid=%s))"
     search_base_dns = ["{{ printf "ou=%s,%s" "users" .Values.global.domainComponent }}"]
 
     [servers.attributes]
@@ -73,7 +73,7 @@ data:
     email =  "mail"
 
     [[servers.group_mappings]]
-    group_dn = "{{ printf "cn=%s,ou=%s,%s" .Values.grafana.server.auth.group "groups" .Values.global.domainComponent }}"
+    group_dn = "{{ printf "cn=%s,ou=%s,%s" .Values.server.auth.group "groups" .Values.global.domainComponent }}"
     org_role = "Admin"
 
   "datasources.yml": |

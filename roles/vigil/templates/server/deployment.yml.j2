@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ vigil.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      {{ service.selector | to_nice_yaml | indent(6) }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: "{{ vigil_cfg | hash('md5') }}"
+{% if vigil.server.podAnnotations %}
+        {{ vigil.server.podAnnotations | to_nice_yaml | indent(8) }}
+{% endif %}
+      labels:
+        {{ service.selector | to_nice_yaml | indent(8) }}
+{% if vigil.server.podLabels %}
+        {{ vigil.server.podLabels | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      serviceAccountName: "{{ vigil.server.name }}"
+      enableServiceLinks: false
+      securityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+{% if openldap.server.pullSecret is defined %}
+      imagePullSecrets:
+        - name: "{{ openldap.server.pullSecret }}"
+{% endif %}
+      containers:
+        - name: "server"
+          image: "{{ vigil.server.image.name }}:{{ vigil.server.image.tag }}"
+          imagePullPolicy: "{{ vigil.server.image.pullPolicy }}"
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+{% if vigil.server.env %}
+          env:
+            {{ vigil.server.env | to_nice_yaml | indent(12) }}
+{% endif %}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{ vigil.server.resources | to_nice_yaml | indent(12) }}
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: "/etc/vigil.cfg"
+              subPath: "vigil.cfg"
+              readOnly: true
+      nodeSelector:
+        {{ vigil.server.nodeSelector | to_nice_yaml | indent(8) }}
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ vigil.server.name }}"
+            optional: false
+            items:
+              - key: "vigil.cfg"
+                path: "vigil.cfg"

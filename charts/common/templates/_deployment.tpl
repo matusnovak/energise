@@ -1,5 +1,5 @@
 {{- define "deployment-spec" -}}
-{{ $data := (index (index .Values .Chart.Name) .component) -}}
+{{ $data := (index .Values .component) -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:

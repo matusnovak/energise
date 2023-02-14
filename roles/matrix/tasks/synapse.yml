@@ -1,0 +1,94 @@
+- name: "Set matrix synapse facts"
+  set_fact:
+    matrix_synapse_homeserver_url: "{{ matrix.synapse.name }}-homeserver.{{ common.namespace }}.svc.cluster.local"
+
+- name: "Load matrix synapse templates"
+  set_fact:
+    homeserver_log_config: "{{ lookup('template', role_path + '/templates/homeserver.log.config.j2') }}"
+
+- name: "Load matrix synapse templates for homeserver"
+  set_fact:
+    worker_homeserver_yaml: "{{ lookup('template', role_path + '/templates/homeserver.yaml.j2') }}"
+  
+- name: "Load matrix synapse template for generic_worker"
+  set_fact:
+    worker_generic_worker_yaml: "{{ lookup('template', role_path + '/templates/worker.yaml.j2', template_vars=dict(config=matrix.synapse.workers.generic_worker)) }}"
+  when: matrix.synapse.workers.generic_worker.enabled
+
+- name: "Load matrix synapse template for federation_reader"
+  set_fact:
+    worker_federation_reader_yaml: "{{ lookup('template', role_path + '/templates/worker.yaml.j2', template_vars=dict(config=matrix.synapse.workers.federation_reader)) }}"
+  when: matrix.synapse.workers.federation_reader.enabled
+
+- name: "Load matrix synapse template for synchrotron"
+  set_fact:
+    worker_synchrotron_yaml: "{{ lookup('template', role_path + '/templates/worker.yaml.j2', template_vars=dict(config=matrix.synapse.workers.synchrotron)) }}"
+  when: matrix.synapse.workers.synchrotron.enabled
+
+- name: "Load matrix synapse template for pusher"
+  set_fact:
+    worker_pusher_yaml: "{{ lookup('template', role_path + '/templates/worker.yaml.j2', template_vars=dict(config=matrix.synapse.workers.pusher)) }}"
+  when: matrix.synapse.workers.pusher.enabled
+
+- name: "Load matrix synapse template for appservice"
+  set_fact:
+    worker_appservice_yaml: "{{ lookup('template', role_path + '/templates/worker.yaml.j2', template_vars=dict(config=matrix.synapse.workers.appservice)) }}"
+  when: matrix.synapse.workers.appservice.enabled
+
+- name: "Load matrix synapse template for federation_sender"
+  set_fact:
+    worker_federation_sender_yaml: "{{ lookup('template', role_path + '/templates/worker.yaml.j2', template_vars=dict(config=matrix.synapse.workers.federation_sender)) }}"
+  when: matrix.synapse.workers.federation_sender.enabled
+
+- name: "Load matrix synapse template for media_repository"
+  set_fact:
+    worker_media_repository_yaml: "{{ lookup('template', role_path + '/templates/worker.yaml.j2', template_vars=dict(config=matrix.synapse.workers.media_repository)) }}"
+  when: matrix.synapse.workers.media_repository.enabled
+
+- name: "Load matrix synapse template for user_dir"
+  set_fact:
+    worker_user_dir_yaml: "{{ lookup('template', role_path + '/templates/worker.yaml.j2', template_vars=dict(config=matrix.synapse.workers.user_dir)) }}"
+  when: matrix.synapse.workers.user_dir.enabled
+
+- name: "Load matrix synapse template for frontend_proxy"
+  set_fact:
+    worker_frontend_proxy_yaml: "{{ lookup('template', role_path + '/templates/worker.yaml.j2', template_vars=dict(config=matrix.synapse.workers.frontend_proxy)) }}"
+  when: matrix.synapse.workers.frontend_proxy.enabled
+
+- name: "Run deployment"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/synapse/"
+    name: "{{ matrix.synapse.name }}"
+    deployment_timeout: 0
+    storages: []
+
+- name: "Run deployment for homeserver"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/worker/"
+    name: "{{ matrix.synapse.name }}-homeserver"
+    worker:
+      type: "homeserver"
+      config: "{{ matrix.synapse.workers.homeserver }}"
+    deployment_timeout: 12
+    storages:
+      - dir: "{{ matrix.synapse.storage.dir }}"
+        mode: "0775"
+        uid: 991
+        gid: 991
+
+- name: "Run deployment for worker"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/worker/"
+    name: "{{ matrix.synapse.name }}-{{ synapse_worker.key | replace('_', '-') }}"
+    worker:
+      type: "{{ synapse_worker.key }}"
+      config: "{{ synapse_worker.value }}"
+    deployment_timeout: 12
+    storages: []
+  loop_control:
+    loop_var: synapse_worker
+  when: synapse_worker.key != "homeserver"
+  loop: "{{ matrix.synapse.workers | dict2items }}"

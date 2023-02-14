@@ -8,86 +8,103 @@ dependencies:
     repository: file://charts/postgres
     condition: global.deploy.postgres
     import-values:
-      - child: postgres.server
+      - child: server
         parent: global.postgres.server
   - name: openldap
     repository: file://charts/openldap
     condition: global.deploy.openldap
     import-values:
-      - child: openldap.server
+      - child: server
         parent: global.openldap.server
   - name: traefik
     repository: file://charts/traefik
     condition: global.deploy.traefik
     import-values:
-      - child: traefik.server
+      - child: server
         parent: global.traefik.server
   - name: errorpage
     repository: file://charts/errorpage
     condition: global.deploy.errorpage
+    import-values:
+      - child: server
+        parent: global.errorpage.server
   - name: authelia
     repository: file://charts/authelia
     condition: global.deploy.authelia
     import-values:
-      - child: authelia.server
+      - child: server
         parent: global.authelia.server
   - name: phpldapadmin
     repository: file://charts/phpldapadmin
     condition: global.deploy.phpldapadmin
     import-values:
-      - child: phpldapadmin.server
+      - child: server
         parent: global.phpldapadmin.server
   - name: loki
     repository: file://charts/loki
     condition: global.deploy.loki
     import-values:
-      - child: loki.server
+      - child: server
         parent: global.loki.server
   - name: promtail
     repository: file://charts/promtail
     condition: global.deploy.promtail
     import-values:
-      - child: promtail.daemon
+      - child: daemon
         parent: global.promtail.daemon
   - name: prometheus
     repository: file://charts/prometheus
     condition: global.deploy.prometheus
     import-values:
-      - child: prometheus.server
+      - child: server
         parent: global.prometheus.server
   - name: grafana
     repository: file://charts/grafana
     condition: global.deploy.grafana
     import-values:
-      - child: grafana.server
+      - child: server
         parent: global.grafana.server
   - name: gatus
     repository: file://charts/gatus
     condition: global.deploy.gatus
     import-values:
-      - child: gatus.server
+      - child: server
         parent: global.gatus.server
   - name: adminer
     repository: file://charts/adminer
     condition: global.deploy.adminer
     import-values:
-      - child: adminer.server
+      - child: server
         parent: global.adminer.server
   - name: gitlab
     repository: file://charts/gitlab
     condition: global.deploy.gitlab
     import-values:
-      - child: gitlab.server
+      - child: server
         parent: global.gitlab.server
+      - child: runner
+        parent: global.gitlab.runner
   - name: keel
     repository: file://charts/keel
     condition: global.deploy.keel
     import-values:
-      - child: keel.server
+      - child: server
         parent: global.keel.server
   - name: homer
     repository: file://charts/homer
     condition: global.deploy.homer
     import-values:
-      - child: homer.server
+      - child: server
         parent: global.homer.server
+  - name: drawio
+    repository: file://charts/drawio
+    condition: global.deploy.drawio
+    import-values:
+      - child: server
+        parent: global.drawio.server
+  - name: haste
+    repository: file://charts/haste
+    condition: global.deploy.haste
+    import-values:
+      - child: server
+        parent: global.haste.server

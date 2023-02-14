@@ -1,0 +1,30 @@
+{{ include "ingressroute-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+    {{- if .Values.global.traefik.server.https.enabled }}
+    domains:
+      - main: "{{ .Values.server.subdomainPages }}.{{ .Values.global.domain }}"
+        sans: 
+          - "*.{{ .Values.server.subdomainPages }}.{{ .Values.global.domain }}"
+    {{- end }}
+  routes:
+    - match: Host(`{{ .Values.server.subdomain }}.{{ .Values.global.domain }}`)
+      kind: Rule
+      services:
+       - name: "{{ .Chart.Name }}-server"
+         namespace: "{{ .Release.Namespace }}"
+         port: 80
+    - match: Host(`{{ .Values.server.subdomainRegistry }}.{{ .Values.global.domain }}`)
+      kind: Rule
+      services:
+       - name: "{{ .Chart.Name }}-server"
+         namespace: "{{ .Release.Namespace }}"
+         port: 81
+    - match: "HostRegexp(`{{ .Values.server.subdomainPages }}.{{ .Values.global.domain }}`, `{subdomain:[a-z0-9_-]+}.{{ .Values.server.subdomainPages }}.{{ .Values.global.domain }}`)"
+      kind: Rule
+      services:
+       - name: "{{ .Chart.Name }}-server"
+         namespace: "{{ .Release.Namespace }}"
+         port: 82

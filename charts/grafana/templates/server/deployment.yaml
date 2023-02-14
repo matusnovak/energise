@@ -16,26 +16,26 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "server"
-      "annotations" .Values.grafana.server.pod.annotations
+      "annotations" .Values.server.pod.annotations
       "checksum" $configMapHash) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-server"
       securityContext:
-        runAsUser: {{ .Values.grafana.server.uid }}
-        runAsGroup: {{ .Values.grafana.server.gid }}
-        fsGroup: {{ .Values.grafana.server.gid }}
-      {{- with .Values.grafana.server.pullSecret }}
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       initContainers:
         {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
-        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.grafana.server.auth.group) | nindent 8 }}
+        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.server.auth.group) | nindent 8 }}
       containers:
         - name: "{{ .Chart.Name }}-server"
-          image: "{{ .Values.grafana.server.image.name }}:{{ .Values.grafana.server.image.tag }}"
-          imagePullPolicy: "{{ .Values.grafana.server.image.pullPolicy }}"
-          {{- with .Values.grafana.server.env }}
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
+          {{- with .Values.server.env }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -62,7 +62,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.grafana.server.resources | nindent 12 }}
+            {{- toYaml .Values.server.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
@@ -79,7 +79,7 @@ spec:
             - name: "data-volume"
               mountPath: "/var/lib/grafana"
       nodeSelector:
-        {{- toYaml .Values.grafana.server.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
       volumes:
         - name: "config-volume"
           configMap:

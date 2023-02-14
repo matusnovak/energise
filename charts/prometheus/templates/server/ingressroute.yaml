@@ -4,13 +4,13 @@
   "Chart" .Chart
   "component" "server") }}
   routes:
-    - match: Host(`{{ .Values.prometheus.server.subdomain }}.{{ .Values.global.domain }}`)
+    - match: Host(`{{ .Values.server.subdomain }}.{{ .Values.global.domain }}`)
       kind: Rule
       services:
        - name: "{{ .Chart.Name }}-server"
          namespace: "{{ .Release.Namespace }}"
          port: 9090
-      {{- if .Values.prometheus.server.auth.enabled }}
+      {{- if .Values.server.auth.enabled }}
       middlewares:
         - name: "traefik-server-auth"
           namespace: {{ .Release.Namespace }}

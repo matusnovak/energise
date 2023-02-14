@@ -3,7 +3,7 @@
   "Release" .Release
   "Chart" .Chart
   "component" "server"
-  "service" .Values.prometheus.server.service) }}
+  "service" .Values.server.service) }}
   ports:
     - port: 9090
       protocol: "TCP"

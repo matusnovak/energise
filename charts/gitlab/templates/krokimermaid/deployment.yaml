@@ -15,22 +15,22 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "krokimermaid"
-      "annotations" .Values.gitlab.krokimermaid.pod.annotations) | nindent 4}}
+      "annotations" .Values.krokimermaid.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-krokimermaid"
       securityContext:
-        runAsUser: {{ .Values.gitlab.krokimermaid.uid }}
-        runAsGroup: {{ .Values.gitlab.krokimermaid.gid }}
-        fsGroup: {{ .Values.gitlab.krokimermaid.gid }}
-      {{- with .Values.gitlab.krokimermaid.pullSecret }}
+        runAsUser: {{ .Values.krokimermaid.uid }}
+        runAsGroup: {{ .Values.krokimermaid.gid }}
+        fsGroup: {{ .Values.krokimermaid.gid }}
+      {{- with .Values.krokimermaid.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-krokimermaid"
-          image: "{{ .Values.gitlab.krokimermaid.image.name }}:{{ .Values.gitlab.krokimermaid.image.tag }}"
-          imagePullPolicy: "{{ .Values.gitlab.krokimermaid.image.pullPolicy }}"
-          {{- with .Values.gitlab.krokimermaid.env }}
+          image: "{{ .Values.krokimermaid.image.name }}:{{ .Values.krokimermaid.image.tag }}"
+          imagePullPolicy: "{{ .Values.krokimermaid.image.pullPolicy }}"
+          {{- with .Values.krokimermaid.env }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -38,33 +38,15 @@ spec:
             - name: web
               containerPort: 8002
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: web
-            failureThreshold: 3
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 2
-          readinessProbe:
-            httpGet:
-              path: /
-              port: web
-            failureThreshold: 1
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.gitlab.krokimermaid.resources | nindent 12 }}
+            {{- toYaml .Values.krokimermaid.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
               mountPath: "/data"
       nodeSelector:
-        {{- toYaml .Values.gitlab.krokimermaid.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.krokimermaid.nodeSelector | nindent 8 }}
       volumes:
         - name: "data-volume"
           emptyDir: {}

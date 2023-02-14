@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ vigil.proxy.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if vigil.proxy.serviceLabels -%}
+    {{ vigil.proxy.serviceLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if vigil.proxy.serviceAnnotations -%}
+  annotations:
+    {{ vigil.proxy.serviceAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ vigil.proxy.serviceType }}"
+  ports:
+    - port: 80
+      protocol: TCP
+      name: web
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}

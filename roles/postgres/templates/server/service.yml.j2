@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ postgres.server.name }}"
+  namespace: "{{ common.namespace }}"
+  labels:
+    {{ service.extraLabels | to_nice_yaml | indent(4) }}
+{% if postgres.server.serviceLabels -%}
+    {{ postgres.server.serviceLabels | to_nice_yaml | indent(4) }}
+{%- endif %}
+{% if postgres.server.serviceAnnotations -%}
+  annotations:
+    {{ postgres.server.serviceAnnotations | to_nice_yaml | indent(4) }}
+{%- endif %}
+spec:
+  type: "{{ postgres.server.serviceType }}"
+  ports:
+    - port: 5432
+      protocol: TCP
+      name: postgres
+  selector:
+    {{ service.selector | to_nice_yaml | indent(4) }}

@@ -1,0 +1,14 @@
+- name: "Set matrix nginx facts"
+  set_fact:
+    matrix_nginx_url: "{{ matrix.nginx.name }}.{{ common.namespace }}.svc.cluster.local"
+    matrix_conf: "{{ lookup('template', role_path + '/templates/matrix.conf.j2') }}"
+    client_file: "{{ lookup('template', role_path + '/templates/client.j2') }}"
+    server_file: "{{ lookup('template', role_path + '/templates/server.j2') }}"
+
+- name: "Run deployment"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/nginx/"
+    name: "{{ matrix.nginx.name }}"
+    deployment_timeout: 6
+    storages: []

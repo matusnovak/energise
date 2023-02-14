@@ -1,6 +1,4 @@
-apiVersion: apps/v1
-kind: Deployment
-{{ include "metadata-spec" (dict 
+{{ include "deployment-spec" (dict 
   "Values" .Values
   "Release" .Release
   "Chart" .Chart
@@ -17,27 +15,27 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "server"
-      "annotations" .Values.phpldapadmin.server.pod.annotations) | nindent 4}}
+      "annotations" .Values.server.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-server"
       securityContext:
-        runAsUser: {{ .Values.phpldapadmin.server.uid }}
-        runAsGroup: {{ .Values.phpldapadmin.server.gid }}
-        fsGroup: {{ .Values.phpldapadmin.server.gid }}
-      {{- with .Values.phpldapadmin.server.pullSecret }}
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
       imagePullSecrets:
         - name: "{{ . }}"
       {{- end }}
       containers:
         - name: "{{ .Chart.Name }}-server"
-          image: "{{ .Values.phpldapadmin.server.image.name }}:{{ .Values.phpldapadmin.server.image.tag }}"
-          imagePullPolicy: "{{ .Values.phpldapadmin.server.image.pullPolicy }}"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
           env:
             - name: PHPLDAPADMIN_LDAP_HOSTS
               value: "#PYTHON2BASH:[{'openldap-server.{{ .Release.Namespace }}.svc.cluster.local': [{'server': [{'tls': False}]},{'login': [{'bind_id': 'cn=admin,{{ .Values.global.domainComponent }}'}]}]}]"
             - name: PHPLDAPADMIN_HTTPS
               value: "false"
-          {{- with .Values.phpldapadmin.server.env }}
+          {{- with .Values.server.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
@@ -63,8 +61,8 @@ spec:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            {{- toYaml .Values.phpldapadmin.server.resources | nindent 12 }}
+            {{- toYaml .Values.server.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
       nodeSelector:
-        {{- toYaml .Values.phpldapadmin.server.nodeSelector | nindent 8 }}
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}

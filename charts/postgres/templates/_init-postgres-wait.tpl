@@ -1,5 +1,5 @@
 {{- define "init-postgres-wait" -}}
-{{ $postgres := (.Values.postgres | default .Values.global.postgres) -}}
+{{- $postgres := ((.Values.server.isPostgres | default false) | ternary .Values .Values.global.postgres) -}}
 - name: "init-postgres-wait"
   image: "{{ $postgres.server.image.name }}:{{ $postgres.server.image.tag }}"
   imagePullPolicy: "{{ $postgres.server.image.pullPolicy }}"

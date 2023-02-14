@@ -1,0 +1,11 @@
+- name: "Set gitlab kroki-blockdiag facts"
+  set_fact:
+    gitlab_kroki_blockdiag_url: "{{ gitlab.krokiBlockdiag.name }}.{{ common.namespace }}.svc.cluster.local"
+
+- name: "Run deployment"
+  include_tasks: "roles/common/tasks/apply.yml"
+  vars:
+    resources: "{{ role_path }}/templates/kroki-blockdiag/"
+    name: "{{ gitlab.krokiBlockdiag.name }}"
+    deployment_timeout: 6
+    storages: []

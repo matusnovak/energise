@@ -4,7 +4,7 @@
   "Chart" .Chart
   "component" "server") }}
   routes:
-    - match: Host(`{{ .Values.grafana.server.subdomain }}.{{ .Values.global.domain }}`)
+    - match: Host(`{{ .Values.server.subdomain }}.{{ .Values.global.domain }}`)
       kind: Rule
       services:
        - name: "{{ .Chart.Name }}-server"

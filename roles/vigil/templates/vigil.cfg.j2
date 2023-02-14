@@ -1,0 +1,303 @@
+[server]
+log_level = "debug"
+inet = "0.0.0.0:8080"
+workers = 1
+manager_token = "Password1!"
+reporter_token = "Password1!"
+
+[assets]
+path = "./res/assets/"
+
+
+[branding]
+page_title = "{{ common.domain }} - Status Page"
+page_url = "https://{{ vigil.server.subdomain }}.{{ common.domain }}/"
+company_name = "{{ common.domain }}"
+website_url = "https://{{ common.domain }}/"
+support_url = "mailto:admin@{{ common.domain }}"
+icon_color = "#9803fc"
+icon_url = "https://{{ vigil.server.subdomain }}.{{ common.domain }}/assets/images/badges/icon-healthy-default.svg"
+logo_color = "#9803fc"
+logo_url = "https://{{ vigil.server.subdomain }}.{{ common.domain }}/assets/images/badges/icon-healthy-large.svg"
+custom_html = ""
+
+[metrics]
+poll_interval = 60
+poll_retry = 2
+poll_http_status_healthy_above = 200
+poll_http_status_healthy_below = 400
+poll_delay_dead = 5
+poll_delay_sick = 2
+poll_parallelism = 4
+push_delay_dead = 20
+push_system_cpu_sick_above = 0.90
+push_system_ram_sick_above = 0.90
+script_interval = 300
+script_parallelism = 2
+local_delay_dead = 40
+
+[notify]
+startup_notification = false
+reminder_interval = 300
+reminder_backoff_function = "linear"
+reminder_backoff_limit = 3
+
+[probe]
+
+[[probe.service]]
+id = "core"
+label = "Core Services"
+
+[[probe.service.node]]
+id = "postgres-server"
+label = "PostgreSQL Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/postgres-server"]
+
+[[probe.service.node]]
+id = "postgres-backup"
+label = "PostgreSQL Backup"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/postgres-backup"]
+
+[[probe.service.node]]
+id = "mariadb-server"
+label = "MariaDB Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/mariadb-server"]
+
+[[probe.service.node]]
+id = "openldap-server"
+label = "OpenLDAP Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/openldap-server"]
+
+[[probe.service.node]]
+id = "authelia-server"
+label = "Authelia Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/authelia-server"]
+
+[[probe.service.node]]
+id = "authelia-redis"
+label = "Authelia Redis"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/authelia-redis"]
+
+{% if registry.enabled %}
+[[probe.service.node]]
+id = "registry-server"
+label = "Docker Registry"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/registry-server"]
+{% endif %}
+
+[[probe.service]]
+id = "apps"
+label = "Applications"
+
+{% if adminer.enabled %}
+[[probe.service.node]]
+id = "adminer-server"
+label = "Adminer"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/adminer-server"]
+{% endif %}
+
+{% if filebrowser.enabled %}
+[[probe.service.node]]
+id = "filebrowser-server"
+label = "FileBrowser"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/filebrowser-server"]
+{% endif %}
+
+{% if phpldapadmin.enabled %}
+[[probe.service.node]]
+id = "phpldapadmin-server"
+label = "phpLDAPAdmin"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/phpldapadmin-server"]
+{% endif %}
+
+{% if matrix.enabled %}
+[[probe.service.node]]
+id = "matrix-element"
+label = "Matrix Element"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/matrix-element"]
+
+[[probe.service.node]]
+id = "matrix-redis"
+label = "Matrix Redis"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/matrix-redis"]
+
+[[probe.service.node]]
+id = "matrix-nginx"
+label = "Matrix Nginx"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/matrix-nginx"]
+
+{% for type, config in matrix.synapse.workers.items() %}
+[[probe.service.node]]
+id = "matrix-synapse-{{ type | replace('_', '-') }}"
+label = "Matrix Synapse {{ type | replace('_', '-') }}"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/matrix-synapse-{{ type | replace('_', '-') }}"]
+{% endfor %}
+{% endif %}
+
+{% if photoprism.enabled %}
+[[probe.service.node]]
+id = "photoprism-server"
+label = "PhotoPrism"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/photoprism-server"]
+{% endif %}
+
+{% if send.enabled %}
+[[probe.service.node]]
+id = "send-redis"
+label = "Send Redis"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/send-redis"]
+
+[[probe.service.node]]
+id = "send-server"
+label = "Send Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/send-server"]
+{% endif %}
+
+{% if gitlab.enabled %}
+[[probe.service.node]]
+id = "gitlab-redis"
+label = "GitLab Redis"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-redis"]
+
+[[probe.service.node]]
+id = "gitlab-cache"
+label = "GitLab Cache"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-cache"]
+
+[[probe.service.node]]
+id = "gitlab-storage"
+label = "GitLab Storage"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-storage"]
+
+[[probe.service.node]]
+id = "gitlab-kroki"
+label = "GitLab kroki"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki"]
+
+{% if gitlab.runner.token %}
+[[probe.service.node]]
+id = "gitlab-runner"
+label = "GitLab Runner"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-runner"]
+{% endif %}
+
+[[probe.service.node]]
+id = "gitlab-kroki-blockdiag"
+label = "GitLab kroki-blockdiag"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki-blockdiag"]
+
+[[probe.service.node]]
+id = "gitlab-kroki-bpmn"
+label = "GitLab kroki-bpmn"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki-bpmn"]
+
+[[probe.service.node]]
+id = "gitlab-kroki-excalidraw"
+label = "GitLab kroki-excalidraw"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki-excalidraw"]
+
+[[probe.service.node]]
+id = "gitlab-kroki-mermaid"
+label = "GitLab kroki-mermaid"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-kroki-mermaid"]
+
+[[probe.service.node]]
+id = "gitlab-server"
+label = "GitLab Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/gitlab-server"]
+{% endif %}
+
+{% if onlyoffice.enabled %}
+[[probe.service.node]]
+id = "onlyoffice-redis"
+label = "ONLYOFFICE Redis"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/onlyoffice-redis"]
+
+[[probe.service.node]]
+id = "onlyoffice-rabbitmq"
+label = "ONLYOFFICE RabbitMQ"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/onlyoffice-rabbitmq"]
+
+[[probe.service.node]]
+id = "onlyoffice-server"
+label = "ONLYOFFICE Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/onlyoffice-server"]
+{% endif %}
+
+{% if qbittorrent.enabled %}
+[[probe.service.node]]
+id = "qbittorrent-server"
+label = "qBittorrent Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/qbittorrent-server"]
+{% endif %}
+
+{% if haste.enabled %}
+[[probe.service.node]]
+id = "haste-server"
+label = "Haste Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/haste-server"]
+{% endif %}
+
+{% if hedgedoc.enabled %}
+[[probe.service.node]]
+id = "hedgedoc-server"
+label = "HedgeDoc Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/hedgedoc-server"]
+{% endif %}
+
+{% if drawio.enabled %}
+[[probe.service.node]]
+id = "drawio-server"
+label = "Drawio Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/drawio-server"]
+{% endif %}
+
+{% if joplin.enabled %}
+[[probe.service.node]]
+id = "joplin-server"
+label = "Joplin Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/joplin-server"]
+{% endif %}
+
+{% if syncthing.enabled %}
+[[probe.service.node]]
+id = "syncthing-server"
+label = "Syncthing Server"
+mode = "poll"
+replicas = ["http://{{ vigil_proxy_url }}:80/deployment/syncthing-server"]
+{% endif %}

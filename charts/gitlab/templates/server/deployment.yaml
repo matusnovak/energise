@@ -1,0 +1,116 @@
+{{ $configMapHash := include (print $.Template.BasePath "/server/configmap.yaml") . | sha256sum }}
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.server.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "{{ .Chart.Name }}-server"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
+          env:
+            - name: "GITLAB_OMNIBUS_CONFIG"
+              valueFrom:
+                configMapKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "GITLAB_OMNIBUS_CONFIG"
+          {{- with .Values.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 80
+              protocol: TCP
+            - name: registry
+              containerPort: 81
+              protocol: TCP
+            - name: pages
+              containerPort: 82
+              protocol: TCP
+            - name: ssh
+              containerPort: 22
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /-/liveness
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 600
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /-/readiness
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/var/opt/gitlab"
+            - name: "git-volume"
+              mountPath: "/git-data"
+            - name: "config-volume"
+              mountPath: "/etc/gitlab"
+            - name: "logs-volume"
+              mountPath: "/var/log/gitlab"
+            - name: "shared-volume"
+              mountPath: "/shared"
+            - name: "builds-volume"
+              mountPath: "/builds"
+            - name: "ssh-volume"
+              mountPath: "/var/opt/gitlab/.ssh"
+      nodeSelector:
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "data-volume"
+          emptyDir: {}
+        - name: "git-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-git"
+        - name: "config-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-config"
+        - name: "logs-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-logs"
+        - name: "shared-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-shared"
+        - name: "builds-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-builds"
+        - name: "ssh-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-ssh"

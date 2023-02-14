@@ -7,23 +7,23 @@ data:
   "traefik.yml": |
     entryPoints:
       traefik:
-        address: ":{{ .Values.traefik.server.port }}"
-    {{- if .Values.traefik.server.http.enabled }}
+        address: ":{{ .Values.server.port }}"
+    {{- if .Values.server.http.enabled }}
       web:
-        address: ":{{ .Values.traefik.server.http.port}}"
+        address: ":{{ .Values.server.http.port}}"
     {{- end }}
-    {{- if  .Values.traefik.server.https.enabled }}
+    {{- if  .Values.server.https.enabled }}
       websecure:
-        address: ":{{ .Values.traefik.server.https.port}}"
+        address: ":{{ .Values.server.https.port}}"
     {{- end }}
-    {{- if  .Values.traefik.server.accessLog.enabled }}
+    {{- if  .Values.server.accessLog.enabled }}
     accessLog: {}
     {{- end }}
     log:
-      level: {{ .Values.traefik.server.log.level }}
+      level: {{ .Values.server.log.level }}
     ping:
       entryPoint: traefik
-    {{- if  .Values.traefik.server.dashboard.enabled }}
+    {{- if  .Values.server.dashboard.enabled }}
     api:
       dashboard: true
       insecure: true
@@ -33,12 +33,12 @@ data:
         namespaces:
           - "{{ .Release.Namespace }}"
         allowCrossNamespace: false
-    {{- if .Values.traefik.server.https.enabled }}
-    {{- if eq .Values.traefik.server.certs.type "self-signed" }}
+    {{- if .Values.server.https.enabled }}
+    {{- if eq .Values.server.certs.type "self-signed" }}
     tls:
       stores:
         default: {}
-    {{- if and (.Values.traefik.server.certs.certFile) (.Values.traefik.server.certs.keyFile) }}
+    {{- if and (.Values.server.certs.certFile) (.Values.server.certs.keyFile) }}
       certificates:
         - certFile: "/certs/{{ .Values.global.domain }}.cert"
           keyFile: "/certs/{{ .Values.global.domain }}.key"
@@ -50,7 +50,7 @@ data:
           sans:
             - "{{ .Values.global.domain }}"
     {{- end }}
-    {{- if eq .Values.traefik.server.certs.type "resolver" }}
+    {{- if eq .Values.server.certs.type "resolver" }}
     tls:
       stores:
         default: {}
@@ -62,24 +62,24 @@ data:
     certificatesResolvers:
       resolver:
         acme:
-          email: "{{ .Values.traefik.server.certs.email }}"
+          email: "{{ .Values.server.certs.email }}"
           storage: "/acme/acme.json"
-          caServer: "{{ .Values.traefik.server.certs.server }}"
-          certificatesDuration: {{ .Values.traefik.server.certs.duration }}
-    {{- if eq .Values.traefik.server.certs.challenge "tls" }}
+          caServer: "{{ .Values.server.certs.server }}"
+          certificatesDuration: {{ .Values.server.certs.duration }}
+    {{- if eq .Values.server.certs.challenge "tls" }}
           tlsChallenge: {}
-    {{- else if eq .Values.traefik.server.certs.challenge "http" }}
+    {{- else if eq .Values.server.certs.challenge "http" }}
           httpChallenge:
             entryPoint: "web"
-    {{- else if eq .Values.traefik.server.certs.challenge "dns" }}
+    {{- else if eq .Values.server.certs.challenge "dns" }}
           dnsChallenge:
-            provider: "{{ .Values.traefik.server.certs.dnsProvider }}"
+            provider: "{{ .Values.server.certs.dnsProvider }}"
             resolvers:
-              {{ toYaml .Values.traefik.server.certs.dnsResolvers | nindent 10 }}
+              {{ toYaml .Values.server.certs.dnsResolvers | nindent 14 }}
     {{- end }}
     {{- end }}
     {{- end }}
-    {{- if .Values.traefik.server.metrics.enabled }}
+    {{- if .Values.server.metrics.enabled }}
     metrics:
       prometheus:
         entryPoint: "traefik"

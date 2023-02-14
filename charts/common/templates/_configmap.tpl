@@ -1,5 +1,5 @@
 {{- define "configmap-spec" }}
-{{ $data := (index (index .Values .Chart.Name) .component) -}}
+{{ $data := (index .Values .component) -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
