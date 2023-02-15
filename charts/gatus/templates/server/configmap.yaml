@@ -403,7 +403,8 @@ data:
         headers:
           "Host": "{{ .Values.global.gitlab.server.subdomainPages }}.{{ .Values.global.domain }}"
         conditions:
-          - "[STATUS] == any(200)"
+          - "[STATUS] == 404"
+          - "[BODY] == pat(*<h3>The page you're looking for could not be found.</h3>*)"
       - name: GitLab Server
         group: GitLab
         url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/gitlab-server

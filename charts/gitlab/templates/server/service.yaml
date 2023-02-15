@@ -20,8 +20,8 @@
   "Release" .Release
   "Chart" .Chart
   "component" "server"
-  "service" .Values.server.service
-  "suffix" "ssh") }}
+  "service" .Values.server.serviceSSH
+  "suffix" "-ssh") }}
   ports:
     - port: {{ .Values.server.sshPort }}
       targetPort: "ssh"

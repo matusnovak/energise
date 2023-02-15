@@ -34,7 +34,7 @@ data:
     gitlab_rails['db_encoding'] = 'unicode'
     gitlab_rails['db_host'] = 'postgres-server.{{ .Release.Namespace }}.svc.cluster.local'
     gitlab_rails['db_password'] = '{{ .Values.server.database.password }}'
-    gitlab_rails['gitlab_shell_ssh_port'] = 22
+    gitlab_rails['gitlab_shell_ssh_port'] = {{ .Values.server.sshPort }}
     gitlab_rails['ldap_enabled'] = true
     gitlab_rails['prevent_ldap_sign_in'] = false
     gitlab_rails['packages_enabled'] = true
