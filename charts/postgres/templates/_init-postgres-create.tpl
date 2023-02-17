@@ -10,6 +10,9 @@
       echo "SELECT 'CREATE DATABASE {{ .database.name }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ .database.name }}')\gexec" | psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_ROLE -d $POSTGRES_DB;
       echo "SELECT 'CREATE ROLE {{ .database.role }} WITH LOGIN PASSWORD ''{{ .database.password }}''' WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '{{ .database.role }}')\gexec" | psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_ROLE -d $POSTGRES_DB;
       echo "GRANT ALL PRIVILEGES ON DATABASE {{ .database.name }} TO {{ .database.role }}" | psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_ROLE -d $POSTGRES_DB;
+{{- if .database.superuser }}
+      echo "ALTER USER myuser WITH SUPERUSER" | psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_ROLE -d $POSTGRES_DB;
+{{- end }}
   env:
     - name: POSTGRES_HOST
       value: "postgres-server.{{ .Release.Namespace }}.svc.cluster.local"

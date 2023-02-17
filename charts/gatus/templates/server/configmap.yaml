@@ -589,7 +589,7 @@ data:
       {{- if .Values.global.deploy.matrix }}
       - name: Matrix API
         group: Matrix
-        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local/.well-known/matrix/server
         interval: 5m
         ui:
           hide-hostname: true
@@ -665,4 +665,60 @@ data:
           - "[STATUS] == 200"
       {{- end }}
       {{- end }}
+      {{- end }}
+
+      {{- if .Values.global.deploy.joplin }}
+      - name: Joplin Web
+        group: Joplin
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.joplin.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: Joplin Server
+        group: Joplin
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/joplin-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.hedgedoc }}
+      - name: HedgeDoc Web
+        group: HedgeDoc
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.hedgedoc.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: HedgeDoc Server
+        group: HedgeDoc
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/hedgedoc-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
       {{- end }}

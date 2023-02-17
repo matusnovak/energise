@@ -1,0 +1,111 @@
+server:
+  # Docker image for the joplin server.
+  image:
+    # Image name without the tag.
+    # type: string
+    name: "docker.io/joplin/server"
+
+    # Image tag.
+    # type: string
+    tag: "latest"
+
+    # Image pull policy.
+    # type: string
+    pullPolicy: "IfNotPresent"
+
+  # Automatic update policy with Keel
+  keel:
+    enabled: true
+    policy: "force"
+    matchTag: false
+
+  # Subdomain at which to host the web GUI.
+  # Leave empty for no subdomain
+  # type: string
+  subdomain: "joplin"
+
+  # Database options.
+  database:
+    # Name of the database. The database will be created if it does not exist.
+    # type: string
+    name: "joplin"
+
+    # Role for the database. The role will be created if it does not exist.
+    # type: string
+    role: "joplin"
+
+    # Role password for the database.
+    # type: string
+    password: "Password1!"
+
+  # The user ID to run with.
+  # type: integer
+  uid: "1000"
+
+  # The group ID to run with.
+  # type: integer
+  gid: "1000"
+
+  # Additional environment variables for the pod.
+  # type: map
+  # example: [{ "name": "MY_ENV_KEY", "value": "some_value" }]
+  env: []
+
+  # Service related variables
+  service:
+    # The kubernetes service type.
+    # type: string
+    type: "ClusterIP"
+
+    # Additional annotations to add to the service.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    annotations: {}
+
+    # Additional labels to add to the service.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    labels: {}
+  
+  # Pod related variables
+  pod:
+    # Additional annotations to add to the pod.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    annotations: {}
+
+    # Additional labels to add to the pod.
+    # type: map
+    # example: { "example.com/hello": "world" }
+    labels: {}
+
+  # Specify which node or nodes can be used to host this pod.
+  # Leave as an empty map to allow the pod to be spawned anywhere.
+  # type: map
+  # example: { "kubernetes.io/arch": "amd64" }
+  nodeSelector: {}
+
+  # Optionally specify how much of each resource the pod will need.
+  resources:
+    # Maximum limits that the pod can not exceed.
+    # Set to ~ or null to disable the resource limits.
+    limits:
+      # Maximum CPU that the pod can not exceed.
+      # type: string
+      # example: "1000m"
+      cpu: ~
+      # Maximum RAM that the pod can not exceed.
+      # type: string
+      # example: "1024Mi"
+      memory: ~
+    # Requested limits for scheduling the pod on nodes.
+    # Set to ~ or null to disable the resource requests.
+    requests:
+      # The requested amount of CPU
+      # type: string
+      # example: "500m"
+      cpu: ~
+      # The requested amount of CPU
+      # type: string
+      # example: "512Mi"
+      memory: ~

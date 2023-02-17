@@ -1,0 +1,116 @@
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      initContainers:
+        {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.server.auth.group) | nindent 8 }}
+      containers:
+        - name: "{{ .Chart.Name }}-server"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
+          env:
+            - name: CMD_URL_ADDPORT
+              value: "false"
+            - name: CMD_DOMAIN
+              value: "{{ .Values.server.subdomain }}.{{ .Values.global.domain }}"
+            - name: CMD_ALLOW_ORIGIN
+              value: "{{ .Values.server.subdomain }}.{{ .Values.global.domain }}"
+            - name: CMD_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "cmdDbUrl"
+                  optional: false
+            - name: CMD_ALLOW_ANONYMOUS
+              value: "false"
+            - name: CMD_ALLOW_ANONYMOUS_EDITS
+              value: "false"
+            - name: CMD_EMAIL
+              value: "false"
+            - name: CMD_LDAP_URL
+              value: "ldap://openldap-server.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: CMD_LDAP_BINDDN
+              value: "cn=readonly,{{ .Values.global.domainComponent }}"
+            - name: CMD_LDAP_BINDCREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "ldapPassword"
+                  optional: false
+            - name: CMD_LDAP_SEARCHBASE
+              value: "ou=users,{{ .Values.global.domainComponent }}"
+            - name: CMD_LDAP_SEARCHFILTER
+              value: "(&(uid={{ printf "{{username}}" }})(memberOf=cn={{ .Values.server.auth.group }},ou=groups,{{ .Values.global.domainComponent }}))"
+            - name: CMD_LDAP_SEARCHATTRIBUTES
+              value: "dn,cn,uid"
+            - name: CMD_LDAP_USERIDFIELD
+              value: "uid"
+            - name: CMD_LDAP_USERNAMEFIELD
+              value: "uid"
+            - name: CMD_LDAP_PROVIDERNAME
+              value: "{{ .Values.global.domain }}"
+            - name: CMD_PROTOCOL_USESSL
+              value: "true"
+          {{- with .Values.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/hedgedoc/public/uploads"
+      nodeSelector:
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "data-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-data"

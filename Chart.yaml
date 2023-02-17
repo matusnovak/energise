@@ -116,3 +116,15 @@ dependencies:
         parent: global.matrix.server
       - child: element
         parent: global.matrix.element
+  - name: joplin
+    repository: file://charts/joplin
+    condition: global.deploy.joplin
+    import-values:
+      - child: server
+        parent: global.joplin.server
+  - name: hedgedoc
+    repository: file://charts/hedgedoc
+    condition: global.deploy.hedgedoc
+    import-values:
+      - child: server
+        parent: global.hedgedoc.server

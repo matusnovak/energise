@@ -22,6 +22,8 @@ global:
     drawio: false
     haste: false
     matrix: false
+    joplin: false
+    hedgedoc: false
 
   storage:
     class: 'default'

@@ -53,6 +53,20 @@ data:
             tag: "chat"
             url: "https://{{ .Values.global.matrix.element.subdomain }}.{{ .Values.global.domain }}/"
           {{- end }}
+          {{- if .Values.global.deploy.joplin }}
+          - name: "Joplin Server"
+            icon: "fa-solid fa-book"
+            subtitle: "Sync server for Joplin a note taking application"
+            tag: "notes"
+            url: "https://{{ .Values.global.joplin.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+          {{- if .Values.global.deploy.hedgedoc }}
+          - name: "HedgeDoc"
+            icon: "fa-brands fa-markdown"
+            subtitle: "The best platform to write and share markdown"
+            tag: "notes"
+            url: "https://{{ .Values.global.hedgedoc.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
 
       - name: "System"
         icon: "fas fa-code-branch"

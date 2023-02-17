@@ -1,0 +1,103 @@
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      initContainers:
+        {{- include "init-postgres-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+        {{- include "init-postgres-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "database" .Values.server.database) | nindent 8 }}
+      containers:
+        - name: "{{ .Chart.Name }}-server"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
+          env:
+            - name: "APP_PORT"
+              value: "8080"
+            - name: "APP_BASE_URL"
+              value: "https://{{ .Values.server.subdomain }}.{{ .Values.global.domain }}"
+            - name: "DB_CLIENT"
+              value: "pg"
+            - name: "POSTGRES_DATABASE"
+              value: "{{ .Values.server.database.name }}"
+            - name: "POSTGRES_USER"
+              value: "{{ .Values.server.database.role }}"
+            - name: "POSTGRES_PORT"
+              value: "5432"
+            - name: "POSTGRES_HOST"
+              value: "postgres-server.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: "POSTGRES_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "databasePassword"
+                  optional: false
+          {{- with .Values.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /api/ping
+              port: web
+              httpHeaders:
+                - name: "Host"
+                  value: "{{ .Values.server.subdomain }}.{{ .Values.global.domain }}"
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /api/ping
+              port: web
+              httpHeaders:
+                - name: "Host"
+                  value: "{{ .Values.server.subdomain }}.{{ .Values.global.domain }}"
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "logs-volume"
+              mountPath: "/home/joplin/packages/server/logs"
+            - name: "temp-volume"
+              mountPath: "/home/joplin/packages/server/temp"
+      nodeSelector:
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "logs-volume"
+          emptyDir: {}
+        - name: "temp-volume"
+          emptyDir: {}
