@@ -585,3 +585,84 @@ data:
         conditions:
           - "[STATUS] == 200"
       {{- end }}
+
+      {{- if .Values.global.deploy.matrix }}
+      - name: Matrix API
+        group: Matrix
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+          ignore-follow: true
+        headers:
+          "Host": "{{ .Values.global.matrix.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: Matrix Web
+        group: Matrix
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+          ignore-follow: true
+        headers:
+          "Host": "{{ .Values.global.matrix.element.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: Matrix Redis
+        group: Matrix
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/matrix-redis
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      - name: Matrix Nginx
+        group: Matrix
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/matrix-nginx
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      - name: Matrix Element
+        group: Matrix
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/matrix-element
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- range $type, $config := .Values.global.matrix.server.workers }}
+      {{- if $config.enabled }}
+      - name: Matrix Server {{ $type | replace "_" " " | title }}
+        group: Matrix
+        url: http://{{ $.Chart.Name }}-proxy.{{ $.Release.Namespace }}.svc.cluster.local/deployment/matrix-server-{{ $type | replace "_" "-" }}
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+      {{- end }}
+      {{- end }}

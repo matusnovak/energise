@@ -1,0 +1,20 @@
+{{- range $type, $config := .Values.server.workers }}
+{{- if $config.enabled }}
+---
+{{ include "service-spec" (dict 
+  "Values" $.Values
+  "Release" $.Release
+  "Chart" $.Chart
+  "component" (printf "server-%s" ($type | replace "_" "-"))
+  "service" $.Values.server.service) }}
+  ports:
+    - port: 8008
+      protocol: "TCP"
+      name: "synapse"
+{{- if eq $type "homeserver" }}
+    - port: 9093
+      protocol: "TCP"
+      name: "replication"
+{{- end }}
+{{- end }}
+{{- end }}

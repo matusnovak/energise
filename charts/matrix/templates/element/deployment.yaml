@@ -1,0 +1,79 @@
+{{ $configMapHash := include (print $.Template.BasePath "/element/configmap.yaml") . | sha256sum }}
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "element") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "element") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "element"
+      "annotations" .Values.element.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-element"
+      securityContext:
+        runAsUser: {{ .Values.element.uid }}
+        runAsGroup: {{ .Values.element.gid }}
+        fsGroup: {{ .Values.element.gid }}
+      {{- with .Values.element.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "{{ .Chart.Name }}-element"
+          image: "{{ .Values.element.image.name }}:{{ .Values.element.image.tag }}"
+          imagePullPolicy: "{{ .Values.element.image.pullPolicy }}"
+          {{- with .Values.element.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.element.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: "/app/config.json"
+              subPath: "config.json"
+              readOnly: true
+      nodeSelector:
+        {{- toYaml .Values.element.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "config-volume"
+          configMap:
+            name: "{{ .Chart.Name }}-element"
+            optional: false
+            items:
+              - key: "config.json"
+                path: "config.json"

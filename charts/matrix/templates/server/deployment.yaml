@@ -1,0 +1,142 @@
+{{ $configMapHash := include (print $.Template.BasePath "/server/configmap.yaml") . | sha256sum }}
+{{- range $type, $config := .Values.server.workers }}
+{{- if $config.enabled }}
+---
+{{ include "deployment-spec" (dict 
+  "Values" $.Values
+  "Release" $.Release
+  "Chart" $.Chart
+  "component" (printf "server-%s" ($type | replace "_" "-"))) }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" $.Chart "component" (printf "server-%s" ($type | replace "_" "-"))) | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" $.Values
+      "Release" $.Release
+      "Chart" $.Chart
+      "component" (printf "server-%s" ($type | replace "_" "-"))
+      "annotations" $.Values.server.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ $.Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ $.Values.server.uid }}
+        runAsGroup: {{ $.Values.server.gid }}
+        fsGroup: {{ $.Values.server.gid }}
+      {{- with $.Values.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      initContainers:
+      {{- if eq $type "homeserver" }}
+        {{- include "init-postgres-wait" (dict "Values" $.Values "Release" $.Release "Chart" $.Chart) | nindent 8 }}
+        {{- include "init-postgres-create" (dict "Values" $.Values "Release" $.Release "Chart" $.Chart "database" $.Values.server.database) | nindent 8 }}
+        {{- include "init-openldap-wait" (dict "Values" $.Values "Release" $.Release "Chart" $.Chart) | nindent 8 }}
+        {{- include "init-openldap-create" (dict "Values" $.Values "Release" $.Release "Chart" $.Chart "group" $.Values.server.auth.group) | nindent 8 }}
+      {{- else }}
+        - name: "init-homeserver-wait"
+          image: "{{ $.Values.global.curl.image.name }}:{{ $.Values.global.curl.image.tag }}"
+          imagePullPolicy: "{{ $.Values.global.curl.image.pullPolicy }}"
+          command:
+            - 'sh'
+            - '-c'
+            - 'until curl --connect-timeout 5 --max-time 10 -f "http://{{ $.Chart.Name }}-server-homeserver.{{ $.Release.Namespace }}.svc.cluster.local:8008/health"; do echo "waiting for homeserver"; sleep 2; done;'
+      {{- end }}
+      containers:
+        - name: "{{ $.Chart.Name }}-server-{{ $type | replace "_" "-" }}"
+          image: "{{ $.Values.server.image.name }}:{{ $.Values.server.image.tag }}"
+          imagePullPolicy: "{{ $.Values.server.image.pullPolicy }}"
+          command:
+            - 'python'
+          args:
+            - '-m'
+            - '{{ $config.app }}'
+            - '-c'
+            - '/config/homeserver.yaml'
+          {{- if not (eq $type "homeserver") }}
+            - '-c'
+            - '/config/{{ $type }}.yaml'
+          {{- end }}
+            - '-c'
+            - '/config/conf.d/'
+          {{- with $.Values.server.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: synapse
+              containerPort: 8008
+              protocol: TCP
+          {{- if eq $type "homeserver" }}
+            - name: replication
+              containerPort: 9093
+              protocol: TCP
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: synapse
+            failureThreshold: 3
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: synapse
+            failureThreshold: 1
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml $.Values.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/data"
+            - name: "config-volume"
+              mountPath: "/config"
+              readOnly: true
+            - name: "signingkey-volume"
+              mountPath: "/secrets"
+              readOnly: true
+            - name: "temp-config"
+              mountPath: "/config/conf.d"
+      nodeSelector:
+        {{- toYaml $.Values.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: "{{ $.Chart.Name }}-server"
+            optional: false
+            items:
+              - key: "homeserver.log.config"
+                path: "homeserver.log.config"
+              - key: "homeserver.yaml"
+                path: "homeserver.yaml"
+              {{- if not (eq $type "homeserver") }}
+              - key: "{{ $type }}.yaml"
+                path: "{{ $type }}.yaml"
+              {{- end }}
+        - name: "data-volume"
+          persistentVolumeClaim:
+            claimName: "{{ $.Chart.Name }}-server-data"
+        - name: "signingkey-volume"
+          secret:
+            secretName: "{{ $.Chart.Name }}-server"
+            optional: false
+            items:
+              - key: "{{ $.Values.global.domain }}.signing.key"
+                path: "{{ $.Values.global.domain }}.signing.key"
+        - name: "temp-config"
+          emptyDir: {}
+
+{{ end }}
+{{- end }}

@@ -1,0 +1,188 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+data:
+  "homeserver.log.config": |
+    version: 1
+
+    formatters:
+      precise:
+        format: '%(asctime)s - %(name)s - %(lineno)d - %(levelname)s - %(request)s - %(message)s'
+
+    filters:
+      context:
+        (): synapse.logging.context.LoggingContextFilter
+        request: ""
+
+    handlers:
+      console:
+        class: logging.StreamHandler
+        formatter: precise
+        filters: [context]
+
+    loggers:
+      synapse.storage.SQL:
+        # beware: increasing this to DEBUG will make synapse log sensitive
+        # information such as access tokens.
+        level: INFO
+
+    root:
+      level: INFO
+      handlers: [console]
+
+    disable_existing_loggers: false
+
+  "homeserver.yaml": |
+    server_name: "{{ .Values.global.domain }}"
+
+    pid_file: /data/homeserver.pid
+
+    web_client_location: "https://{{ .Values.element.subdomain }}.{{ .Values.global.domain }}/"
+
+    public_baseurl: "https://{{ .Values.server.subdomain }}.{{ .Values.global.domain }}/"
+
+    listeners:
+      - port: 8008
+        tls: false
+        type: http
+        x_forwarded: true
+        bind_addresses: ['0.0.0.0']
+
+        resources:
+          - names: [metrics, client, federation]
+            compress: false
+
+      - port: 9093
+        tls: false
+        bind_addresses: ['0.0.0.0']
+        type: http
+
+        resources:
+          - names: [replication]
+            compress: false
+
+    acme:
+      enabled: false
+
+    database:
+      name: "psycopg2"
+      args:
+        user: "{{ .Values.server.database.role }}"
+        password: "{{ .Values.server.database.password }}"
+        database: "{{ .Values.server.database.name }}"
+        host: "postgres-server.{{ .Release.Namespace }}.svc.cluster.local"   
+        cp_min: 5
+        cp_max: 10
+
+    media_store_path: "/data/media"
+
+    uploads_path: "/data/uploads"
+
+    log_config: "/config/homeserver.log.config"
+
+    enable_search: {{ .Values.server.search.enabled | ternary "true" "false" }}
+
+    enable_registration:  {{ .Values.server.registration.enabled | ternary "true" "false" }}
+
+    use_presence: {{ .Values.server.workers.frontend_proxy.enabled | ternary "false" "true" }}
+
+    max_upload_size: 50M
+
+    max_image_pixels: 32M
+
+    url_preview_enabled: {{ .Values.server.urlPreview.enabled | ternary "true" "false" }}
+
+    {{- if .Values.server.urlPreview.enabled }}
+    url_preview_ip_range_blacklist: 
+      {{ toYaml .Values.server.urlPreview.blacklist | nindent 6 }}
+
+    max_spider_size: {{ .Values.server.urlPreview.maxSize }}
+    {{- end }}
+
+    enable_metrics: {{ .Values.server.metrics.enabled | ternary "true" "false" }}
+
+    report_stats: {{ .Values.server.reportStats.enabled | ternary "true" "false" }}
+
+    macaroon_secret_key: "{{ .Values.server.secrets.macaroon }}"
+    form_secret: "{{ .Values.server.secrets.form }}"
+    registration_shared_secret: "{{ .Values.server.secrets.registration }}"
+
+    signing_key_path: "/secrets/{{ .Values.global.domain }}.signing.key"
+
+    trusted_key_servers:
+      {{ toYaml .Values.server.trustedKeyServers | nindent 6 }}
+
+    password_providers:
+      - module: "ldap_auth_provider.LdapAuthProvider"
+        config:
+          enabled: true
+          uri: "ldap://openldap-server.{{ .Release.Namespace }}.svc.cluster.local:389"
+          start_tls: false
+          base: "ou=users,{{ .Values.global.domainComponent }}"
+          attributes:
+            uid: "uid"
+            mail: "email"
+            name: "cn"
+          bind_dn: "cn=readonly,{{ .Values.global.domainComponent }}"
+          bind_password: "{{ .Values.global.openldap.server.readonlyPassword }}"
+          filter: "(memberOf=cn={{ .Values.server.auth.group }},ou=groups,{{ .Values.global.domainComponent }})"
+
+    stats:
+      enabled: true
+
+    redis:
+      enabled: true
+      host: "{{ .Chart.Name }}-redis.{{ .Release.Namespace }}.svc.cluster.local:389"
+      port: 6379
+      password: "{{ .Values.redis.password }}"
+
+    {{- range $type, $config := .Values.server.workers }}
+    {{- if $config.enabled }}
+    {{- if eq $type "appservice" }}
+    notify_appservices: false
+    {{- end }}
+    {{- if eq $type "federation_sender" }}
+    send_federation: false
+    {{- end }}
+    {{- if eq $type "media_repository" }}
+    enable_media_repo: false
+    {{- end }}
+    {{- if eq $type "pusher" }}
+    start_pushers: false
+    {{- end }}
+    {{- if eq $type "user_dir" }}
+    update_user_directory: false
+    {{- end }}
+    {{- end }}
+    {{- end }}
+
+  {{ range $type, $config := .Values.server.workers }}
+  {{- if $config.enabled }}
+  {{- if not (eq $type "homeserver") -}}
+  "{{ $type }}.yaml": |
+    worker_app: "{{ $config.app }}"
+    worker_name: "{{ $config.app | replace "." "_" }}"
+
+    worker_main_http_uri: "http://{{ $.Chart.Name }}-server-homeserver.{{ $.Release.Namespace }}.svc.cluster.local:8008"
+    worker_replication_host: "{{ $.Chart.Name }}-server-homeserver.{{ $.Release.Namespace }}.svc.cluster.local"
+    worker_replication_http_port: 9093
+
+    worker_listeners:
+      - port: 8008
+        tls: false
+        bind_addresses: ['0.0.0.0']
+        type: http
+        x_forwarded: true
+
+        resources:
+          - names:
+              {{ toYaml $config.listeners | nindent 14 }}
+            compress: false
+
+    worker_log_config: "/config/homeserver.log.config"
+  
+  {{ end }}
+  {{- end }}
+  {{- end }}

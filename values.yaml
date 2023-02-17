@@ -21,6 +21,7 @@ global:
     keel: false
     drawio: false
     haste: false
+    matrix: false
 
   storage:
     class: 'default'
@@ -41,3 +42,20 @@ global:
       # Image pull policy.
       # type: string
       pullPolicy: "IfNotPresent"
+
+  # Curl check is used to test whether a particular service is running in the init containers.
+  curl:
+    # Docker image options.
+    image:
+      # Image name without the tag.
+      # type: string
+      name: "docker.io/curlimages/curl"
+
+      # Image tag.
+      # type: string
+      tag: "latest"
+
+      # Image pull policy.
+      # type: string
+      pullPolicy: "IfNotPresent"
+

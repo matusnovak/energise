@@ -1,4 +1,3 @@
-{{ $configMapHash := include (print $.Template.BasePath "/server/configmap.yaml") . | sha256sum }}
 {{ include "deployment-spec" (dict 
   "Values" .Values
   "Release" .Release
@@ -16,8 +15,7 @@ spec:
       "Release" .Release
       "Chart" .Chart
       "component" "server"
-      "annotations" .Values.server.pod.annotations
-      "checksum" $configMapHash) | nindent 4}}
+      "annotations" .Values.server.pod.annotations) | nindent 4}}
     spec:
       serviceAccountName: "{{ .Chart.Name }}-server"
       securityContext:
@@ -67,17 +65,5 @@ spec:
             {{- toYaml .Values.server.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
-          volumeMounts:
-            - name: "config-volume"
-              mountPath: "/config"
-              readOnly: true
       nodeSelector:
         {{- toYaml .Values.server.nodeSelector | nindent 8 }}
-      volumes:
-        - name: "config-volume"
-          configMap:
-            name: "{{ .Chart.Name }}-server"
-            optional: false
-            items:
-              - key: "config.yaml"
-                path: "config.yaml"

@@ -46,6 +46,13 @@ data:
             tag: "git"
             url: "https://{{ .Values.global.gitlab.server.subdomain }}.{{ .Values.global.domain }}/"
           {{- end }}
+          {{- if .Values.global.deploy.gitlab }}
+          - name: "Matrix"
+            icon: "fas fa-comment"
+            subtitle: "An open standard real-time communication"
+            tag: "chat"
+            url: "https://{{ .Values.global.matrix.element.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
 
       - name: "System"
         icon: "fas fa-code-branch"

@@ -5,7 +5,7 @@ kind: IngressRoute
   "Values" .Values
   "Release" .Release
   "Chart" .Chart
-  "component" "server") }}
+  "component" .component) }}
 spec:
   entryPoints:
 {{- if .Values.global.traefik.server.http.enabled }}

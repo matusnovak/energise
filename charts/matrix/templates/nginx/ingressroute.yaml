@@ -1,0 +1,12 @@
+{{ include "ingressroute-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "nginx") }}
+  routes:
+    - match: "Host(`{{ .Values.server.subdomain }}.{{ .Values.global.domain }}`) || (Host(`{{ .Values.global.domain }}`) && PathPrefix(`/.well-known/matrix/`))"
+      kind: Rule
+      services:
+       - name: "{{ .Chart.Name }}-nginx"
+         namespace: "{{ .Release.Namespace }}"
+         port: 80

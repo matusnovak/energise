@@ -108,3 +108,11 @@ dependencies:
     import-values:
       - child: server
         parent: global.haste.server
+  - name: matrix
+    repository: file://charts/matrix
+    condition: global.deploy.matrix
+    import-values:
+      - child: server
+        parent: global.matrix.server
+      - child: element
+        parent: global.matrix.element
