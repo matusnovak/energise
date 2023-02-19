@@ -31,6 +31,7 @@ global:
     syncthing: false
     photoprism: false
     jellyfin: false
+    vaultwarden: false
 
   storage:
     class: 'default'

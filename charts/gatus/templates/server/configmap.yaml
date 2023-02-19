@@ -863,7 +863,7 @@ data:
         headers:
           "Host": "{{ .Values.global.photoprism.server.subdomain }}.{{ .Values.global.domain }}"
         conditions:
-          - "[STATUS] == 401"
+          - "[STATUS] == 200"
       - name: PhotoPrism Server
         group: PhotoPrism
         url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/photoprism-server
@@ -895,6 +895,45 @@ data:
       - name: Jellyfin Server
         group: Jellyfin
         url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/jellyfin-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.vaultwarden }}
+      - name: Vaultwarden Web
+        group: Vaultwarden
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.vaultwarden.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: Vaultwarden Server
+        group: Vaultwarden
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/vaultwarden-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      - name: Vaultwarden SMTP
+        group: Vaultwarden
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/vaultwarden-smtp
         interval: 5m
         ui:
           hide-hostname: true

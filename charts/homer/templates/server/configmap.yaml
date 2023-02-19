@@ -109,6 +109,13 @@ data:
             tag: "video"
             url: "https://{{ .Values.global.jellyfin.server.subdomain }}.{{ .Values.global.domain }}/"
           {{- end }}
+          {{- if .Values.global.deploy.vaultwarden }}
+          - name: "Vaultwarden"
+            icon: "fa-solid fa-vault"
+            subtitle: "Password management service"
+            tag: "video"
+            url: "https://{{ .Values.global.vaultwarden.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
 
       - name: "System"
         icon: "fas fa-code-branch"

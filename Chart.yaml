@@ -170,3 +170,9 @@ dependencies:
     import-values:
       - child: server
         parent: global.jellyfin.server
+  - name: vaultwarden
+    repository: file://charts/vaultwarden
+    condition: global.deploy.vaultwarden
+    import-values:
+      - child: server
+        parent: global.vaultwarden.server

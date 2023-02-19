@@ -1,0 +1,109 @@
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      enableServiceLinks: false
+      securityContext:
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      initContainers:
+        {{- include "init-postgres-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+        {{- include "init-postgres-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "database" .Values.server.database) | nindent 8 }}
+      containers:
+        - name: "{{ .Chart.Name }}-server"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
+          env:
+            - name: "DATA_FOLDER"
+              value: "data"
+            - name: "DATABASE_URL"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "databaseUrl"
+                  optional: false
+            - name: "ROCKET_PORT"
+              value: "8080"
+            - name: "WEBSOCKET_ENABLED"
+              value: "false"
+            - name: "SIGNUPS_ALLOWED"
+              value: "{{ .Values.server.signup.enabled | ternary "true" "false" }}"
+            - name: "SIGNUPS_VERIFY"
+              value: "{{ .Values.server.signup.verify | ternary "true" "false" }}"
+            - name: "INVITATIONS_ALLOWED"
+              value: "{{ .Values.server.signup.invitations | ternary "true" "false" }}"
+            - name: "ADMIN_TOKEN"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "adminToken"
+                  optional: false
+            - name: "DOMAIN"
+              value: "https://{{ .Values.server.subdomain }}.{{ .Values.global.domain }}"
+            - name: "SMTP_HOST"
+              value: "{{ .Chart.Name }}-smtp.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: "SMTP_FROM"
+              value: "vaultwarden@{{ .Values.global.domain }}"
+            - name: "SMTP_SECURITY"
+              value: "off"
+            - name: "SMTP_PORT"
+              value: "587"
+          {{- with .Values.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/data"
+      nodeSelector:
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-data"
