@@ -164,3 +164,9 @@ dependencies:
     import-values:
       - child: server
         parent: global.photoprism.server
+  - name: jellyfin
+    repository: file://charts/jellyfin
+    condition: global.deploy.jellyfin
+    import-values:
+      - child: server
+        parent: global.jellyfin.server

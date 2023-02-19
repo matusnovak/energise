@@ -30,6 +30,7 @@ global:
     send: false
     syncthing: false
     photoprism: false
+    jellyfin: false
 
   storage:
     class: 'default'

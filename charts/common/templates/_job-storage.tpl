@@ -1,5 +1,6 @@
 {{- define "job-storage" }}
 {{ $data := (index .Values .component) -}}
+{{- if (.storage.setup | default true) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -52,4 +53,5 @@ spec:
           hostPath:
             path: "{{ .storage.path | default .Values.global.storage.path }}"
             type: "Directory"
+{{- end }}
 {{- end }}

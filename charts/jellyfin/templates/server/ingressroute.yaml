@@ -1,0 +1,16 @@
+{{ include "ingressroute-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+  routes:
+    - match: Host(`{{ .Values.server.subdomain }}.{{ .Values.global.domain }}`)
+      kind: Rule
+      services:
+       - name: "{{ .Chart.Name }}-server"
+         namespace: "{{ .Release.Namespace }}"
+         port: 8096
+         passHostHeader: true
+      middlewares:
+        - name: "{{ .Chart.Name }}-server"
+          namespace: "{{ .Release.Namespace }}"

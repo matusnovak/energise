@@ -1,0 +1,23 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+{{ include "metadata-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "suffix" "") }}
+spec:
+  headers:
+    customResponseHeaders:
+      "X-Robots-Tag": "noindex,nofollow,nosnippet,noarchive,notranslate,noimageindex"
+      "SSLRedirect": "true"
+      "SSLHost": "{{ .Values.server.subdomain }}.{{ .Values.global.domain }}"
+      "SSLForceHost": "true"
+      "STSSeconds": "315360000"
+      "STSIncludeSubdomains": "true"
+      "STSPreload": "true"
+      "forceSTSHeader": "true"
+      "frameDeny": "true"
+      "contentTypeNosniff": "true"
+      "browserXSSFilter": "true"
+      "customFrameOptionsValue": "allow-from https://{{ .Values.global.domain }}"

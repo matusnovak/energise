@@ -102,6 +102,13 @@ data:
             tag: "photos"
             url: "https://{{ .Values.global.photoprism.server.subdomain }}.{{ .Values.global.domain }}/"
           {{- end }}
+          {{- if .Values.global.deploy.jellyfin }}
+          - name: "Jellyfin"
+            icon: "fa-solid fa-circle-play"
+            subtitle: "Media server and suite of multimedia applications"
+            tag: "video"
+            url: "https://{{ .Values.global.jellyfin.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
 
       - name: "System"
         icon: "fas fa-code-branch"

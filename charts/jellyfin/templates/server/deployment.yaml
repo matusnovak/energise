@@ -1,0 +1,107 @@
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+        {{- if .Values.server.vaapi.enabled }}
+        supplementalGroups:
+          - 109 # render
+          - 107 # render (or syslog?!)
+          - 44 # video
+        {{- end }}
+      {{- with .Values.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      {{- if .Values.server.auth.enabled }}
+      initContainers:
+        {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.server.auth.group) | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "{{ .Chart.Name }}-server"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
+          {{- with .Values.server.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 8096
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: "config-volume"
+              mountPath: "/cache"
+            - name: "cache-volume"
+              mountPath: "/config"
+            - name: "media-volume"
+              mountPath: "/media"
+              readOnly: true
+            {{- if .Values.server.vaapi.enabled }}
+            - name: "render-device"
+              mountPath: "/dev/dri/renderD128"
+            - name: "card-device"
+              mountPath: "/dev/dri/card0"
+            {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "config-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-config"
+        - name: "cache-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-cache"
+        - name: "media-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-media"
+        {{- if .Values.server.vaapi.enabled }}
+        - name: "render-device"
+          hostPath:
+            path: "/dev/dri/renderD128"
+        - name: "card-device"
+          hostPath:
+            path: "/dev/dri/card0"
+        {{- end }}
