@@ -1,0 +1,31 @@
+{{- include "pvc-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "data"
+  "storage" .Values.server.storage.data) }}
+---
+{{- include "pvc-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "originals"
+  "storage" .Values.server.storage.originals) }}
+---
+{{- include "pvc-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "import"
+  "storage" .Values.server.storage.import) }}
+---
+{{- include "pvc-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "export"
+  "storage" .Values.server.storage.export) }}

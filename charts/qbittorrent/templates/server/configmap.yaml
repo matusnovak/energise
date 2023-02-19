@@ -1,0 +1,11 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+data:
+  "vpn.ovpn": |
+    {{ .Values.server.vpn.conf | nindent 4 }}
+  "resolv.conf": |
+    search {{ .Release.Namespace }}.svc.cluster.local svc.cluster.local cluster.local 
+    options ndots:5

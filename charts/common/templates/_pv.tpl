@@ -17,5 +17,5 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   hostPath:
-    path: "{{ .Values.global.storage.path }}/{{ .storage.dir }}"
+    path: "{{ .storage.path | default .Values.global.storage.path }}{{ if .storage.dir }}/{{- end }}{{ .storage.dir }}"
 {{- end }}

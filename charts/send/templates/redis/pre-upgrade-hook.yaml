@@ -1,0 +1,7 @@
+{{ include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "redis"
+  "name" "data"
+  "storage" .Values.redis.storage.data) }}

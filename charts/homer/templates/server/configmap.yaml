@@ -67,6 +67,41 @@ data:
             tag: "notes"
             url: "https://{{ .Values.global.hedgedoc.server.subdomain }}.{{ .Values.global.domain }}/"
           {{- end }}
+          {{- if .Values.global.deploy.filebrowser }}
+          - name: "File Browser"
+            icon: "fas fa-folder-open"
+            subtitle: "Access your files through a nice web interface"
+            tag: "files"
+            url: "https://{{ .Values.global.filebrowser.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+          {{- if .Values.global.deploy.qbittorrent }}
+          - name: "qBittorrent"
+            icon: "fa-solid fa-cloud-arrow-down"
+            subtitle: "Cross-platform free and open-source BitTorrent client"
+            tag: "files"
+            url: "https://{{ .Values.global.qbittorrent.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+          {{- if .Values.global.deploy.send }}
+          - name: "Send"
+            icon: "fas fa-cloud-arrow-up"
+            subtitle: "Encrypt and send files with a link"
+            tag: "files"
+            url: "https://{{ .Values.global.send.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+          {{- if .Values.global.deploy.syncthing }}
+          - name: "Syncthing"
+            icon: "fa-solid fa-rotate"
+            subtitle: "Syncthing is a continuous file synchronization program"
+            tag: "files"
+            url: "https://{{ .Values.global.syncthing.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+          {{- if .Values.global.deploy.photoprism }}
+          - name: "PhotoPrism"
+            icon: "fas fa-photo-film"
+            subtitle: "AI-Powered Photos App for the Decentralized Web"
+            tag: "photos"
+            url: "https://{{ .Values.global.photoprism.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
 
       - name: "System"
         icon: "fas fa-code-branch"

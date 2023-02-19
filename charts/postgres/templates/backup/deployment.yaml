@@ -90,7 +90,7 @@ spec:
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: "data-volume"
-              mountPath: "/backup"
+              mountPath: "/backups"
       nodeSelector:
         {{- toYaml .Values.backup.nodeSelector | nindent 8 }}
       volumes:

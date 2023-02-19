@@ -1,0 +1,157 @@
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      initContainers:
+        {{- include "init-mariadb-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+        {{- include "init-mariadb-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "database" .Values.server.database) | nindent 8 }}
+      containers:
+        - name: "{{ .Chart.Name }}-server"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
+          env:
+            - name: PHOTOPRISM_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "adminPassword"
+                  optional: false
+            - name: PHOTOPRISM_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "adminUsername"
+                  optional: false
+            - name: PHOTOPRISM_AUTH_MODE
+              value: "password"
+            - name: PHOTOPRISM_SITE_URL
+              value: "https://{{ .Values.server.subdomain }}.{{ .Values.global.domain }}/"
+            - name: PHOTOPRISM_ORIGINALS_LIMIT
+              value: "5000"
+            - name: PHOTOPRISM_HTTP_COMPRESSION
+              value: "gzip"
+            - name: PHOTOPRISM_LOG_LEVEL
+              value: "info"
+            - name: PHOTOPRISM_READONLY
+              value: "false"
+            - name: PHOTOPRISM_EXPERIMENTAL
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_CHOWN
+              value: "true"
+            - name: PHOTOPRISM_DISABLE_WEBDAV
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_SETTINGS
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_TENSORFLOW
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_FACES
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_CLASSIFICATION
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_RAW
+              value: "false"
+            - name: PHOTOPRISM_RAW_PRESETS
+              value: "false"
+            - name: PHOTOPRISM_JPEG_QUALITY
+              value: "85"
+            - name: PHOTOPRISM_DETECT_NSFW
+              value: "false"
+            - name: PHOTOPRISM_UPLOAD_NSFW
+              value: "true"
+            - name: PHOTOPRISM_DATABASE_DRIVER
+              value: "mysql"
+            - name: PHOTOPRISM_DATABASE_SERVER
+              value: "mariadb-server.{{ .Release.Namespace }}.svc.cluster.local:3306"
+            - name: PHOTOPRISM_DATABASE_NAME
+              value: "{{ .Values.server.database.name }}"
+            - name: PHOTOPRISM_DATABASE_USER
+              value: "{{ .Values.server.database.role }}"
+            - name: PHOTOPRISM_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "databasePassword"
+                  optional: false
+            - name: PHOTOPRISM_SITE_CAPTION
+              value: "Homelab"
+            - name: PHOTOPRISM_SITE_DESCRIPTION
+              value: ""
+            - name: PHOTOPRISM_SITE_AUTHOR
+              value: ""
+          {{- with .Values.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 2342
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/photoprism/storage"
+            - name: import-volume
+              mountPath: "/photoprism/import"
+            - name: originals-volume
+              mountPath: "/photoprism/originals"
+            - name: export-volume
+              mountPath: "/photoprism/export"
+      nodeSelector:
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-data"
+        - name: import-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-import"
+        - name: originals-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-originals"
+        - name: export-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-export"

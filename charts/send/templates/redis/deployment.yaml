@@ -1,0 +1,76 @@
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "redis") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "redis") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "redis"
+      "annotations" .Values.redis.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-redis"
+      securityContext:
+        runAsUser: {{ .Values.redis.uid }}
+        runAsGroup: {{ .Values.redis.gid }}
+        fsGroup: {{ .Values.redis.gid }}
+      {{- with .Values.redis.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      containers:
+        - name: "{{ .Chart.Name }}-redis"
+          image: "{{ .Values.redis.image.name }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: "{{ .Values.redis.image.pullPolicy }}"
+          {{- with .Values.redis.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          command:
+            - 'redis-server'
+          args:
+            - '--requirepass'
+            - '{{ .Values.redis.password }}'
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - "redis-cli"
+                - "ping"
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.redis.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: "data-volume"
+              mountPath: "/data"
+      nodeSelector:
+        {{- toYaml .Values.redis.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "data-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-redis-data"

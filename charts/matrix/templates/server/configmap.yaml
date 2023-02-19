@@ -134,7 +134,7 @@ data:
 
     redis:
       enabled: true
-      host: "{{ .Chart.Name }}-redis.{{ .Release.Namespace }}.svc.cluster.local:389"
+      host: "{{ .Chart.Name }}-redis.{{ .Release.Namespace }}.svc.cluster.local"
       port: 6379
       password: "{{ .Values.redis.password }}"
 

@@ -1,3 +1,0 @@
-- name: "Deploy registry"
-  include_tasks: "server.yml"
-  when: registry.enabled

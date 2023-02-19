@@ -86,6 +86,11 @@ data:
           subject: "group:{{ .Values.global.haste.server.auth.group }}"
           policy: "one_factor"
         {{- end }}
+        {{- if and (.Values.global.deploy.qbittorrent) (.Values.global.qbittorrent.server.auth.enabled) }}
+        - domain: "{{ .Values.global.qbittorrent.server.subdomain }}.{{ .Values.global.domain }}"
+          subject: "group:{{ .Values.global.qbittorrent.server.auth.group }}"
+          policy: "one_factor"
+        {{- end }}
     authentication_backend:
       password_reset:
         disable: false

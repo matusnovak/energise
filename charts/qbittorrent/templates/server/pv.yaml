@@ -1,0 +1,15 @@
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "config"
+  "storage" .Values.server.storage.config) }}
+---
+{{- include "pv-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "downloads"
+  "storage" .Values.server.storage.downloads) }}

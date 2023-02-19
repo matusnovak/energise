@@ -124,6 +124,20 @@ data:
           - "[STATUS] == 200"
       {{- end }}
 
+      {{- if .Values.global.deploy.mariadb }}
+      - name: MariaDB Server
+        group: MariaDB
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/mariadb-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
       {{- if .Values.global.deploy.loki }}
       - name: Loki Server
         group: Loki
@@ -713,6 +727,146 @@ data:
       - name: HedgeDoc Server
         group: HedgeDoc
         url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/hedgedoc-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.filebrowser }}
+      - name: FileBrowser Web
+        group: FileBrowser
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.filebrowser.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: FileBrowser Server
+        group: FileBrowser
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/filebrowser-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.qbitorrent }}
+      - name: qBittorrent Web
+        group: qBittorrent
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.qbitorrent.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: qBittorrent Server
+        group: qBittorrent
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/qbitorrent-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.send }}
+      - name: Send Web
+        group: Send
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.send.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: Send Server
+        group: Send
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/send-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.syncthing }}
+      - name: Syncthing Web
+        group: Syncthing
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.syncthing.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 401"
+      - name: Syncthing Server
+        group: Syncthing
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/syncthing-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.photoprism }}
+      - name: PhotoPrism Web
+        group: PhotoPrism
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.photoprism.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 401"
+      - name: PhotoPrism Server
+        group: PhotoPrism
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/photoprism-server
         interval: 5m
         ui:
           hide-hostname: true

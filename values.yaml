@@ -5,6 +5,7 @@ global:
 
   deploy:
     postgres: false
+    mariadb: false
     openldap: false
     traefik: false
     authelia: false
@@ -24,6 +25,11 @@ global:
     matrix: false
     joplin: false
     hedgedoc: false
+    filebrowser: false
+    qbittorrent: false
+    send: false
+    syncthing: false
+    photoprism: false
 
   storage:
     class: 'default'

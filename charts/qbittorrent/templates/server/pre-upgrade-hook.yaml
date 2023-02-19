@@ -1,0 +1,15 @@
+{{ include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "config"
+  "storage" .Values.server.storage.config) }}
+---
+{{ include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "downloads"
+  "storage" .Values.server.storage.downloads) }}

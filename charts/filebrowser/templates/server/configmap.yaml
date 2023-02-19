@@ -1,0 +1,23 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+data:
+  "filebrowser.json": |
+    {
+      "port": 8080,
+      "baseURL": "",
+      "address": "0.0.0.0",
+      "log": "stdout",
+      "database": "/data/filebrowser.db",
+      "root": "/files",
+      "branding": {
+        "disableExternal": true,
+        "name": "{{ .Values.global.domain }}"
+      },
+      "scope": "/",
+      "perm": {
+        "execute": false
+      }
+    }

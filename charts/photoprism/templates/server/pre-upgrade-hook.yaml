@@ -1,0 +1,31 @@
+{{- include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "data"
+  "storage" .Values.server.storage.data) }}
+---
+{{- include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "originals"
+  "storage" .Values.server.storage.originals) }}
+---
+{{- include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "import"
+  "storage" .Values.server.storage.import) }}
+---
+{{- include "job-storage" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server"
+  "name" "export"
+  "storage" .Values.server.storage.export) }}

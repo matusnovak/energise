@@ -10,6 +10,12 @@ dependencies:
     import-values:
       - child: server
         parent: global.postgres.server
+  - name: mariadb
+    repository: file://charts/mariadb
+    condition: global.deploy.mariadb
+    import-values:
+      - child: server
+        parent: global.mariadb.server
   - name: openldap
     repository: file://charts/openldap
     condition: global.deploy.openldap
@@ -128,3 +134,33 @@ dependencies:
     import-values:
       - child: server
         parent: global.hedgedoc.server
+  - name: filebrowser
+    repository: file://charts/filebrowser
+    condition: global.deploy.filebrowser
+    import-values:
+      - child: server
+        parent: global.filebrowser.server
+  - name: qbittorrent
+    repository: file://charts/qbittorrent
+    condition: global.deploy.qbittorrent
+    import-values:
+      - child: server
+        parent: global.qbittorrent.server
+  - name: send
+    repository: file://charts/send
+    condition: global.deploy.send
+    import-values:
+      - child: server
+        parent: global.send.server
+  - name: syncthing
+    repository: file://charts/syncthing
+    condition: global.deploy.syncthing
+    import-values:
+      - child: server
+        parent: global.syncthing.server
+  - name: photoprism
+    repository: file://charts/photoprism
+    condition: global.deploy.photoprism
+    import-values:
+      - child: server
+        parent: global.photoprism.server

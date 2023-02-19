@@ -1,0 +1,161 @@
+{{ $configMapHash := include (print $.Template.BasePath "/server/configmap.yaml") . | sha256sum }}
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.server.pod.annotations
+      "checksum" $configMapHash) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      securityContext:
+        runAsUser: 0
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      {{- if .Values.server.auth.enabled }}
+      initContainers:
+        {{- include "init-openldap-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+        {{- include "init-openldap-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "group" .Values.server.auth.group) | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "{{ .Chart.Name }}-server"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
+          {{- if .Values.server.vpn.enabled }}
+          command:
+            - 'bash'
+          args:
+            - '-c'
+            - |
+              mkdir -p /config/openvpn;
+              cp /ovpn/vpn.ovpn /config/openvpn/vpn.ovpn;
+              cp /etc/resolv-custom.conf /etc/resolv.conf;
+              /etc/openvpn/start.sh;
+          {{- end }}
+          env:
+            - name: "VPN_ENABLED"
+              value: "{{ .Values.server.vpn.enabled | ternary "yes" "no" }}"
+            - name: "VPN_USERNAME"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "vpnUsername"
+                  optional: false
+            - name: "VPN_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "vpnPassword"
+                  optional: false
+            - name: "LAN_NETWORK"
+              value: "0.0.0.0/0"
+            - name: "NAME_SERVERS"
+              value: "1.1.1.1,8.8.8.8"
+            - name: "PUID"
+              value: "{{ .Values.server.uid }}"
+            - name: "PGID"
+              value: "{{ .Values.server.gid }}"
+            - name: "UMASK"
+              value: "002"
+            - name: "WEBUI_PORT_ENV"
+              value: "8080"
+            - name: "INCOMING_PORT_ENV"
+              value: "8999"
+          {{- with .Values.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - "NET_ADMIN"
+          volumeMounts:
+            - name: "tun-device"
+              mountPath: /dev/net/tun
+              readOnly: true
+            - name: "config-volume"
+              mountPath: "/config"
+            - name: "downloads-volume"
+              mountPath: "/downloads"
+            - name: "resolv-volume"
+              mountPath: "/etc/resolv-custom.conf"
+              subPath: "resolv.conf"
+              readOnly: true
+            {{- if .Values.server.vpn.enabled }}
+            - name: "openvpn-volume"
+              mountPath: "/config/openvpn"
+            - name: "ovpn-volume"
+              mountPath: "/ovpn/vpn.ovpn"
+              subPath: "vpn.ovpn"
+              readOnly: true
+            {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: "tun-device"
+          hostPath:
+            path: /dev/net/tun
+        - name: "config-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-config"
+        - name: "downloads-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-downloads"
+        {{- if .Values.server.vpn.enabled }}
+        - name: "openvpn-volume"
+          emptyDir: {}
+        - name: "ovpn-volume"
+          configMap:
+            name: "{{ .Chart.Name }}-server"
+            optional: false
+            items:
+              - key: "vpn.ovpn"
+                path: "vpn.ovpn"
+        {{- end }}
+        - name: "resolv-volume"
+          configMap:
+            name: "{{ .Chart.Name }}-server"
+            optional: false
+            items:
+              - key: "resolv.conf"
+                path: "resolv.conf"
