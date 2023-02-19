@@ -2,6 +2,7 @@ global:
   name: 'Homelab'
   domain: 'homelab.lan'
   domainComponent: 'dc=homelab,dc=lan'
+  timezone: "Europe/Prague"
 
   deploy:
     postgres: false
@@ -32,6 +33,8 @@ global:
     photoprism: false
     jellyfin: false
     vaultwarden: false
+    n8n: false
+    appsmith: false
 
   storage:
     class: 'default'

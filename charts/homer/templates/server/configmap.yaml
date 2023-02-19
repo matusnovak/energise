@@ -23,7 +23,7 @@ data:
 
     services:
       - name: "Applications"
-        icon: "fas fa-code-branch"
+        icon: "fa-solid fa-house-user"
         items:
           {{- if .Values.global.deploy.drawio }}
           - name: "Draw.io"
@@ -116,9 +116,23 @@ data:
             tag: "video"
             url: "https://{{ .Values.global.vaultwarden.server.subdomain }}.{{ .Values.global.domain }}/"
           {{- end }}
+          {{- if .Values.global.deploy.n8n }}
+          - name: "n8n"
+            icon: "fa-solid fa-code-branch"
+            subtitle: "Workflow automation for technical people"
+            tag: "automation"
+            url: "https://{{ .Values.global.n8n.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
+          {{- if .Values.global.deploy.appsmith }}
+          - name: "Appsmith"
+            icon: "fa-regular fa-rectangle-list"
+            subtitle: "Low code developer tool to create applications"
+            tag: "automation"
+            url: "https://{{ .Values.global.appsmith.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
 
       - name: "System"
-        icon: "fas fa-code-branch"
+        icon: "fa-solid fa-wrench"
         items:
           {{- if .Values.global.deploy.gatus }}
           - name: "Status"

@@ -943,3 +943,81 @@ data:
         conditions:
           - "[STATUS] == 200"
       {{- end }}
+
+      {{- if .Values.global.deploy.n8n }}
+      - name: n8n Web
+        group: n8n
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local/signin
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.n8n.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: n8n Server
+        group: n8n
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/n8n-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      - name: n8n SMTP
+        group: n8n
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/n8n-smtp
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.appsmith }}
+      - name: Appsmith Web
+        group: Appsmith
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.appsmith.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: Appsmith Server
+        group: Appsmith
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/appsmith-server
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      - name: Appsmith SMTP
+        group: Appsmith
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/appsmith-smtp
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}

@@ -1,0 +1,107 @@
+{{ include "deployment-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  {{- include "selector-spec" (dict "Chart" .Chart "component" "server") | nindent 2 }}
+  template:
+    {{- include "metadata-spec" (dict 
+      "Values" .Values
+      "Release" .Release
+      "Chart" .Chart
+      "component" "server"
+      "annotations" .Values.server.pod.annotations) | nindent 4}}
+    spec:
+      serviceAccountName: "{{ .Chart.Name }}-server"
+      enableServiceLinks: false
+      securityContext:
+        runAsUser: {{ .Values.server.uid }}
+        runAsGroup: {{ .Values.server.gid }}
+        fsGroup: {{ .Values.server.gid }}
+      {{- with .Values.server.pullSecret }}
+      imagePullSecrets:
+        - name: "{{ . }}"
+      {{- end }}
+      initContainers:
+        {{- include "init-postgres-wait" (dict "Values" .Values "Release" .Release "Chart" .Chart) | nindent 8 }}
+        {{- include "init-postgres-create" (dict "Values" .Values "Release" .Release "Chart" .Chart "database" .Values.server.database) | nindent 8 }}
+      containers:
+        - name: "{{ .Chart.Name }}-server"
+          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
+          env:
+            - name: "DB_TYPE"
+              value: "postgresdb"
+            - name: "DB_POSTGRESDB_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Chart.Name }}-server"
+                  key: "databasePassword"
+                  optional: false
+            - name: "DB_POSTGRESDB_DATABASE"
+              value: "{{ .Values.server.database.name }}"
+            - name: "DB_POSTGRESDB_HOST"
+              value: "postgres-server.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: "DB_POSTGRESDB_PORT"
+              value: "5432"
+            - name: "DB_POSTGRESDB_USER"
+              value: "{{ .Values.server.database.role }}"
+            - name: "DB_POSTGRESDB_SCHEMA"
+              value: "public"
+            - name: "GENERIC_TIMEZONE"
+              value: "{{ .Values.global.timezone }}"
+            - name: "TZ"
+              value: "{{ .Values.global.timezone }}"
+            - name: "N8N_EMAIL_MODE"
+              value: "smtp"
+            - name: "N8N_SMTP_HOST"
+              value: "{{ .Chart.Name }}-smtp.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: "N8N_SMTP_PORT"
+              value: "587"
+            - name: "N8N_SMTP_SENDER"
+              value: "n8n@{{ .Values.global.domain }}"
+            - name: "N8N_SMTP_SSL"
+              value: "false"
+          {{- with .Values.server.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 5678
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/home/node/.n8n"
+      nodeSelector:
+        {{- toYaml .Values.server.nodeSelector | nindent 8 }}
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-data"

@@ -1,0 +1,10 @@
+{{ include "service-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "smtp"
+  "service" .Values.smtp.service) }}
+  ports:
+    - port: 587
+      protocol: "TCP"
+      name: "smtp"

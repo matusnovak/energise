@@ -176,3 +176,15 @@ dependencies:
     import-values:
       - child: server
         parent: global.vaultwarden.server
+  - name: n8n
+    repository: file://charts/n8n
+    condition: global.deploy.n8n
+    import-values:
+      - child: server
+        parent: global.n8n.server
+  - name: appsmith
+    repository: file://charts/appsmith
+    condition: global.deploy.appsmith
+    import-values:
+      - child: server
+        parent: global.appsmith.server
