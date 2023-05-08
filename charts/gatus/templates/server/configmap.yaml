@@ -958,7 +958,7 @@ data:
         headers:
           "Host": "{{ .Values.global.n8n.server.subdomain }}.{{ .Values.global.domain }}"
         conditions:
-          - "[STATUS] == 200"
+          - "[STATUS] == 401"
       - name: n8n Server
         group: n8n
         url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/n8n-server
@@ -1012,6 +1012,34 @@ data:
       - name: Appsmith SMTP
         group: Appsmith
         url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/appsmith-smtp
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          timeout: 10s
+        conditions:
+          - "[STATUS] == 200"
+      {{- end }}
+
+      {{- if .Values.global.deploy.debian }}
+      - name: Debian Web
+        group: Debian
+        url: https://traefik-server.{{ .Release.Namespace }}.svc.cluster.local
+        interval: 5m
+        ui:
+          hide-hostname: true
+          hide-url: true
+        client:
+          insecure: true
+          timeout: 10s
+        headers:
+          "Host": "{{ .Values.global.debian.server.subdomain }}.{{ .Values.global.domain }}"
+        conditions:
+          - "[STATUS] == 200"
+      - name: Debian Server
+        group: Debian
+        url: http://{{ .Chart.Name }}-proxy.{{ .Release.Namespace }}.svc.cluster.local/deployment/debian-server
         interval: 5m
         ui:
           hide-hostname: true

@@ -188,3 +188,9 @@ dependencies:
     import-values:
       - child: server
         parent: global.appsmith.server
+  - name: debian
+    repository: file://charts/debian
+    condition: global.deploy.debian
+    import-values:
+      - child: server
+        parent: global.debian.server

@@ -35,6 +35,7 @@ global:
     vaultwarden: false
     n8n: false
     appsmith: false
+    debian: false
 
   storage:
     class: 'default'

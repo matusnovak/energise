@@ -1,0 +1,27 @@
+{{- include "configmap-spec" (dict 
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "component" "server") }}
+data:
+  "nginx.conf": |
+    events {
+      worker_connections 64;
+    }
+    http {
+      server {
+        listen 80;
+        server_name {{ .Values.server.subdomain }}.{{ .Values.global.domain }};
+
+        location / {
+          root /data/;
+          autoindex on;
+          try_files $uri $uri/ =404;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+          root /usr/share/nginx/html;
+        }
+      }
+    }

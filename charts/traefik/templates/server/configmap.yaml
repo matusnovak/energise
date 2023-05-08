@@ -46,18 +46,18 @@ data:
             - default
     {{- end }}
       domains:
-        - main: "*.{{ .Values.global.domain }}"
+        - main: "{{ .Values.global.domain }}"
           sans:
-            - "{{ .Values.global.domain }}"
+            - "*.{{ .Values.global.domain }}"
     {{- end }}
     {{- if eq .Values.server.certs.type "resolver" }}
     tls:
       stores:
         default: {}
       domains:
-        - main: "*.{{ .Values.global.domain }}"
+        - main: "{{ .Values.global.domain }}"
           sans:
-            - "{{ .Values.global.domain }}"
+            - "*.{{ .Values.global.domain }}"
       certresolver: "resolver"
     certificatesResolvers:
       resolver:

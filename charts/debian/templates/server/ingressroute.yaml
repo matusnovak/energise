@@ -9,7 +9,7 @@
       services:
        - name: "{{ .Chart.Name }}-server"
          namespace: "{{ .Release.Namespace }}"
-         port: 8080
+         port: 80
       {{- if .Values.server.auth.enabled }}
       middlewares:
         - name: "traefik-server-auth"

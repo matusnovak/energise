@@ -130,6 +130,13 @@ data:
             tag: "automation"
             url: "https://{{ .Values.global.appsmith.server.subdomain }}.{{ .Values.global.domain }}/"
           {{- end }}
+          {{- if .Values.global.deploy.debian }}
+          - name: "Debian Archive"
+            icon: "fa-solid fa-box-archive"
+            subtitle: "Debian read only archive via Nginx"
+            tag: "files"
+            url: "https://{{ .Values.global.debian.server.subdomain }}.{{ .Values.global.domain }}/"
+          {{- end }}
 
       - name: "System"
         icon: "fa-solid fa-wrench"

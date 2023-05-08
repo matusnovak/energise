@@ -71,6 +71,11 @@ data:
           subject: "group:{{ .Values.global.traefik.server.auth.group }}"
           policy: "one_factor"
         {{- end }}
+        {{- if and (.Values.global.deploy.adminer) (.Values.global.adminer.server.auth.enabled) }}
+        - domain: "{{ .Values.global.adminer.server.subdomain }}.{{ .Values.global.domain }}"
+          subject: "group:{{ .Values.global.adminer.server.auth.group }}"
+          policy: "one_factor"
+        {{- end }}
         {{- if and (.Values.global.deploy.prometheus) (.Values.global.prometheus.server.auth.enabled) }}
         - domain: "{{ .Values.global.prometheus.server.subdomain }}.{{ .Values.global.domain }}"
           subject: "group:{{ .Values.global.prometheus.server.auth.group }}"

@@ -42,33 +42,23 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
-            - name: traefik
-              containerPort: {{ .Values.server.port }}
-              protocol: TCP
-            {{- if .Values.server.http.enabled }}
             - name: web
-              containerPort: {{ .Values.server.http.port }}
+              containerPort: 80
               protocol: TCP
-            {{- end }}
-            {{- if .Values.server.https.enabled }}
-            - name: websecure
-              containerPort: {{ .Values.server.https.port }}
-              protocol: TCP
-            {{- end }}
-          readinessProbe:
+          livenessProbe:
             httpGet:
-              path: /ping
-              port: traefik
-            failureThreshold: 1
+              path: /
+              port: web
+            failureThreshold: 3
             initialDelaySeconds: 10
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 2
-          livenessProbe:
+          readinessProbe:
             httpGet:
-              path: /ping
-              port: traefik
-            failureThreshold: 3
+              path: /
+              port: web
+            failureThreshold: 1
             initialDelaySeconds: 10
             periodSeconds: 10
             successThreshold: 1
@@ -78,39 +68,27 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
-            - name: config-volume
-              mountPath: "/etc/traefik"
+            - name: "data-volume"
+              mountPath: "/data"
               readOnly: true
-            {{- if eq .Values.server.certs.type "resolver"  }}
-            - name: acme-volume
-              mountPath: /acme
-            {{- end }}
-            {{- if and (.Values.server.certs.certFile) (.Values.server.certs.keyFile) }}
-            - name: certs-volume
-              mountPath: "/certs"
+            - name: "config-volume"
+              mountPath: "/etc/nginx/nginx.conf"
+              subPath: "nginx.conf"
               readOnly: true
-            {{- end }}
+            - name: "cache-volume"
+              mountPath: "/var/cache/nginx"
       nodeSelector:
         {{- toYaml .Values.server.nodeSelector | nindent 8 }}
       volumes:
-        - name: config-volume
+        - name: "data-volume"
+          persistentVolumeClaim:
+            claimName: "{{ .Chart.Name }}-server-data"
+        - name: "config-volume"
           configMap:
             name: "{{ .Chart.Name }}-server"
             optional: false
             items:
-              - key: "traefik.yml"
-                path: "traefik.yml"
-        - name: acme-volume
-          persistentVolumeClaim:
-            claimName: "{{ .Chart.Name }}-server-data"
-        {{- if and (.Values.server.certs.certFile) (.Values.server.certs.keyFile) }}
-        - name: certs-volume
-          secret:
-            secretName: "{{ .Chart.Name }}-server"
-            optional: false
-            items:
-              - key: "cert.pem"
-                path: "{{ .Values.global.domain }}.cert"
-              - key: "key.pem"
-                path: "{{ .Values.global.domain }}.key"
-        {{- end }}
+              - key: "nginx.conf"
+                path: "nginx.conf"
+        - name: "cache-volume"
+          emptyDir: {}
